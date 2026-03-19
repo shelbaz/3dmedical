@@ -4,7 +4,6 @@ import { cors } from "hono/cors";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { auth } from "./auth.js";
 import { appRouter } from "./trpc/index.js";
 import { createContext } from "./trpc/context.js";
 import { existsSync, readFileSync } from "node:fs";
@@ -22,11 +21,6 @@ if (!isProduction) {
     })
   );
 }
-
-// Better Auth routes
-app.on(["POST", "GET"], "/api/auth/**", (c) => {
-  return auth.handler(c.req.raw);
-});
 
 // tRPC routes
 app.use("/api/trpc/*", async (c) => {
