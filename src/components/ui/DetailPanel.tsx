@@ -132,7 +132,7 @@ export function DetailPanel() {
 
   return (
     <div
-      className="w-[400px] flex flex-col border-l overflow-y-auto"
+      className="w-[380px] flex-shrink-0 flex flex-col border-l overflow-y-auto max-md:w-full max-md:border-l-0"
       style={{
         background: "var(--bg-secondary)",
         borderColor: "var(--border)",

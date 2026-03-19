@@ -64,6 +64,18 @@ input[type="range"]::-webkit-slider-thumb:active {
   transform: scale(0.95);
 }
 
+/* Touch behavior */
+@media (max-width: 767px) {
+  html, body { touch-action: manipulation; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  .hide-mobile { display: none !important; }
+}
+
+/* Safe area for notched devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
 /* Select styling */
 select {
   -webkit-appearance: none;

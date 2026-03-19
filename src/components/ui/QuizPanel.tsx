@@ -94,7 +94,7 @@ export function QuizPanel() {
 
   return (
     <div
-      className="w-[340px] flex flex-col"
+      className="w-[340px] flex-shrink-0 flex flex-col max-md:w-full"
       style={{ background: "var(--bg-secondary)" }}
     >
       {/* Header */}

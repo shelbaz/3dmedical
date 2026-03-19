@@ -47,7 +47,7 @@ export function SearchBar() {
   if (!searchOpen) return null;
 
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-[360px]">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-[360px] max-md:w-[calc(100%-2rem)]">
       <div
         className="rounded-xl overflow-hidden shadow-2xl"
         style={{

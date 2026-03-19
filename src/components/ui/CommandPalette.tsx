@@ -148,7 +148,7 @@ export function CommandPalette() {
         onClick={() => setOpen(false)}
       />
       <div
-        className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-[480px] rounded-xl overflow-hidden shadow-2xl"
+        className="fixed top-[15%] left-1/2 -translate-x-1/2 z-50 w-[480px] max-md:w-[calc(100%-2rem)] rounded-xl overflow-hidden shadow-2xl"
         style={{ background: "rgba(18,18,26,0.98)", border: "1px solid rgba(42,42,62,0.8)" }}
       >
         <div className="flex items-center gap-2 px-4 py-3">

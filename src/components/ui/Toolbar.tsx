@@ -68,7 +68,7 @@ export function Toolbar() {
 
   return (
     <div
-      className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-1.5 rounded-2xl"
+      className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-1.5 rounded-2xl max-md:bottom-3 max-md:px-1.5 max-md:gap-0 max-md:max-w-[calc(100%-1rem)] max-md:overflow-x-auto"
       style={{
         background: "rgba(10,10,18,0.85)",
         border: "1px solid rgba(30,30,50,0.6)",
