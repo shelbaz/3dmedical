@@ -7,91 +7,92 @@ import { useAppStore } from "../../store/useAppStore";
 import { meshRegistry, ClippingPlanesContext } from "./utils";
 import type { AnatomicalSystem } from "../../types/anatomy";
 
-/** Maps material names from the GLTF to our structure registry */
-const MATERIAL_TO_STRUCTURE: Record<
-  string,
-  { name: string; system: AnatomicalSystem; description?: string; clinicalSignificance?: string }
-> = {
-  Uterus_Whole: {
-    name: "Uterus",
-    system: "organs",
-    description: "Pear-shaped muscular organ. Parts: fundus, body, isthmus, cervix. Three-layered wall: endometrium, myometrium, perimetrium.",
-    clinicalSignificance: "Primary support: cardinal ligaments (Level I), uterosacral ligaments. Uterine artery is primary blood supply.",
-  },
-  Bladder: {
-    name: "Urinary Bladder",
-    system: "organs",
-    description: "Muscular reservoir. Trigone between two ureteric orifices and internal urethral orifice.",
-    clinicalSignificance: "Parasympathetic (S2-S4) contracts detrusor. Radical hysterectomy can denervate the bladder.",
-  },
-  Bone__Female_Pelvis: {
-    name: "Pelvic Bones",
-    system: "skeletal",
-    description: "Os coxae — fused ilium, ischium, and pubis. The pelvic brim divides the greater and lesser pelvis.",
-  },
-  Bone__Female_Sacrum: {
-    name: "Sacrum",
-    system: "skeletal",
-    description: "Triangular bone formed by fusion of S1-S5. The sacral promontory is a key obstetric landmark.",
-    clinicalSignificance: "Fixation point for sacrocolpopexy. Sacral nerve roots S2-S4 provide parasympathetic innervation to pelvic viscera.",
-  },
-  Bone__Female_Coccyx: {
-    name: "Coccyx",
-    system: "skeletal",
-    description: "Terminal bone of the vertebral column, typically 3-5 fused segments.",
-  },
-  // BONE_NEW_larger_2 (lumbar vertebrae) excluded — extends too far above pelvis
-  Fallopian_Tube_Whole: {
-    name: "Fallopian Tubes",
-    system: "organs",
-    description: "Parts: intramural, isthmus, ampulla (fertilization site), infundibulum with fimbriae. Supported by mesosalpinx.",
-  },
-  Ovary2: {
-    name: "Ovaries",
-    system: "organs",
-    description: "In the ovarian fossa. Lymphatics drain DIRECTLY to para-aortic nodes via ovarian vessels.",
-    clinicalSignificance: "Direct para-aortic drainage means ovarian cancer staging requires para-aortic lymphadenectomy.",
-  },
-  Ovarian_Ligament: {
-    name: "Ovarian Ligament",
-    system: "fascia",
-    description: "Connects ovary to uterus. Runs within the broad ligament from the medial ovarian pole to the uterine cornu.",
-  },
-  Cartilage: {
-    name: "Pubic Symphysis",
-    system: "skeletal",
-    description: "Secondary cartilaginous joint between the two pubic bones. Contains a fibrocartilaginous interpubic disc.",
-    clinicalSignificance: "Landmark for retropubic procedures (TVT, Burch colposuspension).",
-  },
-  ureter: {
-    name: "Ureters",
-    system: "organs",
-    description: "Enters pelvis at common iliac bifurcation. Five pelvic segments.",
-    clinicalSignificance: "THREE classic injury sites: (1) pelvic brim under IP ligament, (2) cardinal ligament, (3) intramural segment at bladder entry.",
-  },
-  // kidney_new and adrenal_gland_NEW_2 excluded — too far above pelvis
-  // Transparent_Skin is excluded — it blocks clicks on underlying structures
-};
+/**
+ * Color-based system classification for the MRI-derived model.
+ * Maps material colors to anatomical systems + structure names.
+ */
+interface MeshMapping {
+  system: AnatomicalSystem;
+  namePrefix: string;
+  description?: string;
+  clinicalSignificance?: string;
+}
+
+function colorToHex(c: THREE.Color): string {
+  return "#" + c.getHexString();
+}
+
+function classifyByColor(color: THREE.Color): MeshMapping {
+  const r = Math.round(color.r * 255);
+  const g = Math.round(color.g * 255);
+  const b = Math.round(color.b * 255);
+
+  // Dark red (#c00808) = major arteries
+  if (r > 150 && g < 30 && b < 30)
+    return { system: "arterial", namePrefix: "Artery", description: "Arterial vessel derived from MRI segmentation.", clinicalSignificance: "Part of the pelvic arterial supply from the internal iliac artery system." };
+
+  // Red (#ed3b3b) = arteries/smaller vessels
+  if (r > 200 && g < 80 && b < 80)
+    return { system: "arterial", namePrefix: "Arterial Branch", description: "Arterial branch from MRI segmentation." };
+
+  // Yellow (#fffa2b) = nerves
+  if (r > 200 && g > 200 && b < 80)
+    return { system: "nervous", namePrefix: "Nerve", description: "Neural structure from MRI segmentation.", clinicalSignificance: "Pelvic nerves are critical for bladder, bowel, and sexual function. Damage during surgery causes significant morbidity." };
+
+  // Dark rose (#7b4b57) = pelvic viscera (rectum, etc.)
+  if (r > 100 && r < 140 && g > 60 && g < 90 && b > 70 && b < 100)
+    return { system: "organs", namePrefix: "Pelvic Organ", description: "Pelvic organ from MRI segmentation." };
+
+  // Pink (#eb6666) = reproductive organs
+  if (r > 200 && g > 80 && g < 120 && b > 80 && b < 120)
+    return { system: "organs", namePrefix: "Organ", description: "Reproductive/urinary organ from MRI segmentation." };
+
+  // Light pink (#efa4a4) = uterus/bladder
+  if (r > 200 && g > 140 && g < 180 && b > 140 && b < 180)
+    return { system: "organs", namePrefix: "Organ", description: "Pelvic organ from MRI segmentation." };
+
+  // Yellow-bone (#dadc98) = ligaments/cartilage
+  if (r > 200 && g > 200 && b > 120 && b < 170)
+    return { system: "fascia", namePrefix: "Ligament", description: "Ligamentous/cartilaginous structure from MRI segmentation." };
+
+  // Bone (#dcdcc0) = skeletal
+  if (r > 200 && g > 200 && b > 170)
+    return { system: "skeletal", namePrefix: "Bone", description: "Bony structure from MRI segmentation of the female pelvis." };
+
+  // Gray (#cccccc) = skeletal/cartilage
+  if (r > 180 && g > 180 && b > 180 && Math.abs(r - g) < 10)
+    return { system: "skeletal", namePrefix: "Bone", description: "Skeletal structure from MRI." };
+
+  // Default
+  return { system: "organs", namePrefix: "Structure", description: "Anatomical structure from MRI segmentation." };
+}
+
+// ─── GLTF Mesh Component ───────────────────────────────────
 
 function GLTFMesh({
   mesh,
-  materialName,
-  structureInfo,
+  structureName,
+  system,
+  description,
+  clinicalSignificance,
+  originalColor,
 }: {
   mesh: THREE.Mesh;
-  materialName: string;
-  structureInfo: { name: string; system: AnatomicalSystem; description?: string; clinicalSignificance?: string };
+  structureName: string;
+  system: AnatomicalSystem;
+  description?: string;
+  clinicalSignificance?: string;
+  originalColor: THREE.Color;
 }) {
-  const { name, system, description, clinicalSignificance } = structureInfo;
-  const isHovered = useAppStore((s) => s.hoveredStructure === name);
-  const isSelected = useAppStore((s) => s.selectedStructure?.name === name);
+  const isHovered = useAppStore((s) => s.hoveredStructure === structureName);
+  const isSelected = useAppStore((s) => s.selectedStructure?.name === structureName);
   const setHover = useAppStore((s) => s.setHoveredStructure);
   const setSelected = useAppStore((s) => s.setSelectedStructure);
   const xRayMode = useAppStore((s) => s.xRayMode);
   const systemVisible = useAppStore((s) => s.visibleSystems[system]);
   const systemOpacity = useAppStore((s) => s.systemOpacity[system]);
-  const isWarning = useAppStore((s) => s.warningStructures.includes(name));
-  const highlightColor = useAppStore((s) => s.highlightColors[name]);
+  const isWarning = useAppStore((s) => s.warningStructures.includes(structureName));
+  const highlightColor = useAppStore((s) => s.highlightColors[structureName]);
   const quizMode = useAppStore((s) => s.quizMode);
   const quizTarget = useAppStore((s) => s.quizTarget);
   const clippingPlanes = useContext(ClippingPlanesContext);
@@ -99,21 +100,16 @@ function GLTFMesh({
   const meshRef = useRef<THREE.Mesh>(null!);
   const currentOpacity = useRef(systemVisible ? systemOpacity : 0);
 
-  // Register for outline effect
   useEffect(() => {
-    if (meshRef.current) meshRegistry.set(name, meshRef.current);
-    return () => { meshRegistry.delete(name); };
-  }, [name]);
-
-  // Opacity/visibility animation
-  const isSkin = materialName === "Transparent_Skin";
-  const baseOpacity = isSkin ? 0.05 : 1;
+    if (meshRef.current) meshRegistry.set(structureName, meshRef.current);
+    return () => { meshRegistry.delete(structureName); };
+  }, [structureName]);
 
   let targetOpacity: number;
   if (xRayMode) {
     targetOpacity = isSelected ? 1.0 : isHovered ? 0.5 : 0.12;
   } else {
-    targetOpacity = systemVisible ? systemOpacity * baseOpacity : 0;
+    targetOpacity = systemVisible ? systemOpacity : 0;
   }
 
   useFrame(({ clock }, delta) => {
@@ -132,24 +128,22 @@ function GLTFMesh({
     mat.side = THREE.DoubleSide;
 
     if (isWarning) {
-      const pulse = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
-      mat.emissive = new THREE.Color("#ef4444");
-      mat.emissiveIntensity = pulse;
+      mat.emissive.set("#ef4444");
+      mat.emissiveIntensity = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
     } else if (highlightColor) {
-      mat.emissive = new THREE.Color(highlightColor);
+      mat.emissive.set(highlightColor);
       mat.emissiveIntensity = 0.3;
     } else if (isHovered) {
-      mat.emissiveIntensity = 0.25;
+      mat.emissive.set(originalColor);
+      mat.emissiveIntensity = 0.3;
     } else if (isSelected) {
-      mat.emissiveIntensity = 0.12;
+      mat.emissive.set(originalColor);
+      mat.emissiveIntensity = 0.15;
     } else {
       mat.emissiveIntensity = 0;
     }
 
-    if (clippingPlanes.length > 0) {
-      mat.clippingPlanes = clippingPlanes;
-    }
-
+    if (clippingPlanes.length > 0) mat.clippingPlanes = clippingPlanes;
     mat.needsUpdate = true;
     meshRef.current.visible = op > 0.003;
   });
@@ -159,43 +153,41 @@ function GLTFMesh({
       <mesh
         ref={meshRef}
         geometry={mesh.geometry}
-        onPointerOver={(e) => { e.stopPropagation(); setHover(name); document.body.style.cursor = "pointer"; }}
+        onPointerOver={(e) => { e.stopPropagation(); setHover(structureName); document.body.style.cursor = "pointer"; }}
         onPointerOut={() => { setHover(null); document.body.style.cursor = "default"; }}
         onClick={(e) => {
           e.stopPropagation();
-          setSelected({ id: name, name, system, description, clinicalSignificance });
+          setSelected({ id: structureName, name: structureName, system, description, clinicalSignificance });
         }}
       >
         <meshPhysicalMaterial
-          color={(mesh.material as THREE.MeshStandardMaterial).color ?? "#cccccc"}
-          map={(mesh.material as THREE.MeshStandardMaterial).map ?? null}
-          roughness={system === "skeletal" ? 0.8 : 0.5}
-          clearcoat={system === "skeletal" ? 0.1 : system === "organs" ? 0.3 : 0}
+          color={originalColor}
+          roughness={system === "skeletal" ? 0.75 : system === "organs" ? 0.4 : 0.35}
+          metalness={system === "arterial" || system === "venous" ? 0.1 : 0.02}
+          clearcoat={system === "skeletal" ? 0.15 : system === "organs" ? 0.3 : 0}
           transparent
-          opacity={baseOpacity}
+          opacity={1}
           side={THREE.DoubleSide}
         />
       </mesh>
-      {isHovered && !(quizMode === "identify" && quizTarget === name) && (
+      {isHovered && !(quizMode === "identify" && quizTarget === structureName) && (
         <Html
           position={mesh.geometry.boundingSphere?.center ?? [0, 0, 0]}
           center
           distanceFactor={8}
           style={{ pointerEvents: "none" }}
         >
-          <div
-            style={{
-              background: "rgba(10,10,18,0.92)",
-              border: "1px solid rgba(30,30,50,0.8)",
-              borderRadius: "6px",
-              padding: "4px 10px",
-              fontSize: "11px",
-              color: "#e4e4ef",
-              whiteSpace: "nowrap",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-            }}
-          >
-            {name}
+          <div style={{
+            background: "rgba(10,10,18,0.92)",
+            border: "1px solid rgba(30,30,50,0.8)",
+            borderRadius: "6px",
+            padding: "4px 10px",
+            fontSize: "11px",
+            color: "#e4e4ef",
+            whiteSpace: "nowrap",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+          }}>
+            {structureName}
           </div>
         </Html>
       )}
@@ -203,63 +195,71 @@ function GLTFMesh({
   );
 }
 
+// ─── Main GLTF Model Component ──────────────────────────────
+
 export function GLTFPelvicModel() {
-  const { scene } = useGLTF("/models/female-reproductive-urinary.glb");
+  const { scene } = useGLTF("/models/pelvis-supply-organs-mri.glb");
 
   const structures = useMemo(() => {
-    const result: { mesh: THREE.Mesh; materialName: string; info: { name: string; system: AnatomicalSystem; description?: string; clinicalSignificance?: string } }[] = [];
-    const seenNames = new Set<string>();
+    const result: {
+      mesh: THREE.Mesh;
+      name: string;
+      system: AnatomicalSystem;
+      description?: string;
+      clinicalSignificance?: string;
+      color: THREE.Color;
+    }[] = [];
+
+    const counters: Record<string, number> = {};
 
     scene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        const mat = mesh.material as THREE.MeshStandardMaterial;
-        const matName = mat?.name ?? "";
-        const baseInfo = MATERIAL_TO_STRUCTURE[matName];
-        if (!baseInfo) return;
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (!mat?.color) return;
 
-        // Compute bounding box for raycasting
-        mesh.geometry.computeBoundingBox();
-        mesh.geometry.computeBoundingSphere();
+      mesh.geometry.computeBoundingBox();
+      mesh.geometry.computeBoundingSphere();
 
-        // Handle duplicate material names (e.g. multiple bone parts)
-        let structName = baseInfo.name;
-        if (seenNames.has(structName)) {
-          // Append index for uniqueness but keep same system/description
-          let idx = 2;
-          while (seenNames.has(`${baseInfo.name} (${idx})`)) idx++;
-          structName = `${baseInfo.name} (${idx})`;
-        }
-        seenNames.add(structName);
+      const mapping = classifyByColor(mat.color);
+      const prefix = mapping.namePrefix;
 
-        result.push({
-          mesh,
-          materialName: matName,
-          info: { ...baseInfo, name: structName },
-        });
-      }
+      // Generate unique name
+      counters[prefix] = (counters[prefix] ?? 0) + 1;
+      const name = counters[prefix] === 1 ? prefix : `${prefix} (${counters[prefix]})`;
+
+      result.push({
+        mesh,
+        name,
+        system: mapping.system,
+        description: mapping.description,
+        clinicalSignificance: mapping.clinicalSignificance,
+        color: mat.color.clone(),
+      });
     });
 
     return result;
   }, [scene]);
 
-  // Model is Z-up with pelvis center at ~(0, 0.8, 38). Our scene is Y-up centered at origin.
-  // Rotate -90° on X to convert Z-up → Y-up, then translate and scale to match procedural geometry.
+  // Model is in mm, Y-up. Scale to match our ~3 unit scene.
+  // Center is ~(-5.6, 1.6, 21.7), size ~(290, 337, 180)
+  const scale = 0.008;
+
   return (
-    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} scale={0.22}>
-      <group position={[0, 0, -38]}>
-        {structures.map(({ mesh, materialName, info }, i) => (
-          <GLTFMesh
-            key={info.name}
-            mesh={mesh}
-            materialName={materialName}
-            structureInfo={info}
-          />
-        ))}
-      </group>
+    <group scale={scale} position={[5.6 * scale, -1.6 * scale, -21.7 * scale]}>
+      {structures.map(({ mesh, name, system, description, clinicalSignificance, color }) => (
+        <GLTFMesh
+          key={name}
+          mesh={mesh}
+          structureName={name}
+          system={system}
+          description={description}
+          clinicalSignificance={clinicalSignificance}
+          originalColor={color}
+        />
+      ))}
     </group>
   );
 }
 
-// Preload the model
-useGLTF.preload("/models/female-reproductive-urinary.glb");
+useGLTF.preload("/models/pelvis-supply-organs-mri.glb");

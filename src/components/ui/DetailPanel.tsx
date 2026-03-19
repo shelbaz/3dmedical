@@ -455,20 +455,11 @@ export function DetailPanel() {
         </div>
       )}
 
-      {/* No enriched data */}
-      {!isLoading &&
-        !hasBorders &&
-        !hasArterial &&
-        !hasVenous &&
-        !hasInnervation &&
-        !hasLymphatic &&
-        !clinicalSignificance && (
-          <div
-            className="px-5 py-6 text-xs italic"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Detailed relationship data will be available once real anatomical
-            models are loaded.
+      {/* No data at all */}
+      {!isLoading && !description && !clinicalSignificance &&
+        !hasBorders && !hasArterial && !hasVenous && !hasInnervation && !hasLymphatic && (
+          <div className="px-5 py-6 text-[11px]" style={{ color: "var(--text-tertiary)" }}>
+            Select a structure for detailed anatomical information.
           </div>
         )}
     </div>
