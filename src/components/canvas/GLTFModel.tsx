@@ -40,11 +40,7 @@ const MATERIAL_TO_STRUCTURE: Record<
     system: "skeletal",
     description: "Terminal bone of the vertebral column, typically 3-5 fused segments.",
   },
-  BONE_NEW_larger_2: {
-    name: "Lumbar Vertebrae",
-    system: "skeletal",
-    description: "L4-L5 vertebrae. The aortic bifurcation occurs at L4. The common iliac arteries originate here.",
-  },
+  // BONE_NEW_larger_2 (lumbar vertebrae) excluded — extends too far above pelvis
   Fallopian_Tube_Whole: {
     name: "Fallopian Tubes",
     system: "organs",
@@ -73,21 +69,8 @@ const MATERIAL_TO_STRUCTURE: Record<
     description: "Enters pelvis at common iliac bifurcation. Five pelvic segments.",
     clinicalSignificance: "THREE classic injury sites: (1) pelvic brim under IP ligament, (2) cardinal ligament, (3) intramural segment at bladder entry.",
   },
-  kidney_new: {
-    name: "Kidneys",
-    system: "organs",
-    description: "Retroperitoneal organs at T12-L3 level. Renal hilum contains renal artery, vein, ureter, and lymphatics.",
-  },
-  adrenal_gland_NEW_2: {
-    name: "Adrenal Glands",
-    system: "organs",
-    description: "Suprarenal glands atop each kidney. Cortex produces steroid hormones; medulla produces catecholamines.",
-  },
-  Transparent_Skin: {
-    name: "Body Contour",
-    system: "organs",
-    description: "Transparent body surface for anatomical reference.",
-  },
+  // kidney_new and adrenal_gland_NEW_2 excluded — too far above pelvis
+  // Transparent_Skin is excluded — it blocks clicks on underlying structures
 };
 
 function GLTFMesh({
@@ -224,35 +207,56 @@ export function GLTFPelvicModel() {
   const { scene } = useGLTF("/models/female-reproductive-urinary.glb");
 
   const structures = useMemo(() => {
-    const result: { mesh: THREE.Mesh; materialName: string; info: (typeof MATERIAL_TO_STRUCTURE)[string] }[] = [];
+    const result: { mesh: THREE.Mesh; materialName: string; info: { name: string; system: AnatomicalSystem; description?: string; clinicalSignificance?: string } }[] = [];
+    const seenNames = new Set<string>();
 
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         const mat = mesh.material as THREE.MeshStandardMaterial;
         const matName = mat?.name ?? "";
-        const info = MATERIAL_TO_STRUCTURE[matName];
-        if (info) {
-          // Compute bounding sphere for tooltip positioning
-          mesh.geometry.computeBoundingSphere();
-          result.push({ mesh, materialName: matName, info });
+        const baseInfo = MATERIAL_TO_STRUCTURE[matName];
+        if (!baseInfo) return;
+
+        // Compute bounding box for raycasting
+        mesh.geometry.computeBoundingBox();
+        mesh.geometry.computeBoundingSphere();
+
+        // Handle duplicate material names (e.g. multiple bone parts)
+        let structName = baseInfo.name;
+        if (seenNames.has(structName)) {
+          // Append index for uniqueness but keep same system/description
+          let idx = 2;
+          while (seenNames.has(`${baseInfo.name} (${idx})`)) idx++;
+          structName = `${baseInfo.name} (${idx})`;
         }
+        seenNames.add(structName);
+
+        result.push({
+          mesh,
+          materialName: matName,
+          info: { ...baseInfo, name: structName },
+        });
       }
     });
 
     return result;
   }, [scene]);
 
+  // Model is Z-up with pelvis center at ~(0, 0.8, 38). Our scene is Y-up centered at origin.
+  // Rotate -90° on X to convert Z-up → Y-up, then translate and scale to match procedural geometry.
   return (
-    <group>
-      {structures.map(({ mesh, materialName, info }) => (
-        <GLTFMesh
-          key={info.name + materialName}
-          mesh={mesh}
-          materialName={materialName}
-          structureInfo={info}
-        />
-      ))}
+    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} scale={0.22}>
+      <group position={[0, 0, -38]}>
+        {structures.map(({ mesh, materialName, info }, i) => (
+          <GLTFMesh
+            key={info.name}
+            mesh={mesh}
+            materialName={materialName}
+            structureInfo={info}
+          />
+        ))}
+      </group>
     </group>
   );
 }

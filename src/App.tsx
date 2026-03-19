@@ -127,7 +127,7 @@ function Viewer() {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <LayerPanel />
-      <div className="flex-1 relative">
+      <div className="flex-1 min-w-0 relative">
         <Scene />
         <SearchBar />
         <Toolbar />
