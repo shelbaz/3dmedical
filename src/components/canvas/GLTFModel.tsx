@@ -172,6 +172,9 @@ function GLTFMesh({
   let targetOpacity: number;
   if (store.xRayMode) {
     targetOpacity = store.isSelected ? 1.0 : store.isHovered ? 0.5 : 0.12;
+  } else if (store.isSelected) {
+    // Selected structure always fully visible
+    targetOpacity = 1;
   } else {
     targetOpacity = store.systemVisible ? store.systemOpacity : 0;
   }
@@ -204,12 +207,12 @@ function GLTFMesh({
     } else if (store.highlightColor) {
       mat.emissive.set(store.highlightColor);
       mat.emissiveIntensity = 0.3;
+    } else if (store.isSelected) {
+      mat.emissive.copy(originalColor);
+      mat.emissiveIntensity = 0.5;
     } else if (store.isHovered) {
       mat.emissive.copy(originalColor);
       mat.emissiveIntensity = 0.3;
-    } else if (store.isSelected) {
-      mat.emissive.copy(originalColor);
-      mat.emissiveIntensity = 0.15;
     } else {
       mat.emissive.copy(BLACK);
       mat.emissiveIntensity = 0;

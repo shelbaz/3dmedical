@@ -135,7 +135,17 @@ export const useAppStore = create<AppState>((set) => ({
 
   selectedStructure: null,
   setSelectedStructure: (structure) =>
-    set({ selectedStructure: structure, detailPanelOpen: structure !== null }),
+    set((state) => {
+      // Auto-enable the structure's system so the user can see what they selected
+      const visibleSystems = structure
+        ? { ...state.visibleSystems, [structure.system]: true }
+        : state.visibleSystems;
+      return {
+        selectedStructure: structure,
+        detailPanelOpen: structure !== null,
+        visibleSystems,
+      };
+    }),
 
   hoveredStructure: null,
   setHoveredStructure: (meshName) => set({ hoveredStructure: meshName }),

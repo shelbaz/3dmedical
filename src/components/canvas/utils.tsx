@@ -165,6 +165,10 @@ export const Structure = memo(function Structure({
   if (store.xRayMode) {
     targetOpacity = store.isSelected ? 1.0 : store.isHovered ? 0.5 : 0.12;
     targetDepthWrite = store.isSelected;
+  } else if (store.isSelected) {
+    // Selected structure always fully visible regardless of system opacity
+    targetOpacity = localOpacity;
+    targetDepthWrite = true;
   } else {
     targetOpacity = targetVisible ? systemOpacity * localOpacity : 0;
     targetDepthWrite = targetOpacity >= 0.99;
@@ -205,12 +209,12 @@ export const Structure = memo(function Structure({
     } else if (store.highlightColor) {
       mat.emissive.set(store.highlightColor);
       mat.emissiveIntensity = 0.3;
+    } else if (store.isSelected) {
+      mat.emissive.set(color);
+      mat.emissiveIntensity = 0.5;
     } else if (store.isHovered) {
       mat.emissive.set(color);
       mat.emissiveIntensity = 0.35;
-    } else if (store.isSelected) {
-      mat.emissive.set(color);
-      mat.emissiveIntensity = 0.15;
     } else {
       mat.emissive.copy(BLACK);
       mat.emissiveIntensity = 0;

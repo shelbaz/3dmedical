@@ -58,12 +58,13 @@ export function Effects() {
       />
       <Outline
         selection={outlineTargets}
-        edgeStrength={outlineTargets.length > 0 ? 3 : 0}
+        edgeStrength={outlineTargets.length > 0 ? 6 : 0}
         pulseSpeed={0}
         visibleEdgeColor={edgeColor}
         hiddenEdgeColor={hiddenColor}
         blur
-        xRay={false}
+        width={1200}
+        xRay
       />
       <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
     </EffectComposer>
