@@ -15,5 +15,5 @@ RUN npm ci
 COPY --from=build /app/dist ./dist
 COPY server ./server
 COPY tsconfig.json ./
-EXPOSE 3001
+EXPOSE 3000
 CMD ["npx", "tsx", "server/index.ts"]

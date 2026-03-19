@@ -47,6 +47,6 @@ if (isProduction && existsSync("./dist")) {
   app.get("*", (c) => c.html(indexHtml));
 }
 
-const port = parseInt(process.env.PORT ?? "3001", 10);
+const port = parseInt(process.env.PORT ?? "3000", 10);
 console.log(`Server running on http://localhost:${port}`);
 serve({ fetch: app.fetch, port });
