@@ -11,6 +11,22 @@ import type { AnatomicalSystem } from "../../types/anatomy";
 const WARNING_COLOR = new THREE.Color("#ef4444");
 const BLACK = new THREE.Color("#000000");
 
+// Hover = medium blue, Select = deep saturated blue
+const HOVER_COLOR = new THREE.Color("#2563eb");
+
+// System-specific selection colors — vivid, unmistakable
+const SELECT_COLORS: Record<AnatomicalSystem, THREE.Color> = {
+  skeletal: new THREE.Color("#fbbf24"),   // amber gold
+  muscular: new THREE.Color("#f43f5e"),   // rose
+  arterial: new THREE.Color("#ef4444"),   // red
+  venous: new THREE.Color("#3b82f6"),     // blue
+  nervous: new THREE.Color("#facc15"),    // yellow
+  lymphatic: new THREE.Color("#22c55e"),  // green
+  organs: new THREE.Color("#ec4899"),     // pink
+  fascia: new THREE.Color("#a78bfa"),     // purple
+  spaces: new THREE.Color("#06b6d4"),     // cyan
+};
+
 // ─── Mesh-to-structure mapping by index ────────────────────
 // Derived from MRI model "Bony Pelvis, Supply, Organs from MRI"
 // Positions analyzed to identify anatomical structures.
@@ -200,20 +216,25 @@ function GLTFMesh({
       prevTransparent.current = newTransparent;
     }
 
-    // Emissive — uses pre-allocated colors
+    // Highlight — tint base color AND add emissive glow for maximum visibility
     if (store.isWarning) {
+      mat.color.copy(WARNING_COLOR);
       mat.emissive.copy(WARNING_COLOR);
       mat.emissiveIntensity = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
     } else if (store.highlightColor) {
+      mat.color.copy(originalColor);
       mat.emissive.set(store.highlightColor);
-      mat.emissiveIntensity = 0.3;
+      mat.emissiveIntensity = 0.4;
     } else if (store.isSelected) {
-      mat.emissive.copy(originalColor);
-      mat.emissiveIntensity = 0.5;
+      mat.color.copy(originalColor).lerp(SELECT_COLORS[system], 0.55);
+      mat.emissive.copy(SELECT_COLORS[system]);
+      mat.emissiveIntensity = 0.9;
     } else if (store.isHovered) {
-      mat.emissive.copy(originalColor);
-      mat.emissiveIntensity = 0.3;
+      mat.color.copy(originalColor).lerp(HOVER_COLOR, 0.45);
+      mat.emissive.copy(HOVER_COLOR);
+      mat.emissiveIntensity = 0.5;
     } else {
+      mat.color.copy(originalColor);
       mat.emissive.copy(BLACK);
       mat.emissiveIntensity = 0;
     }
@@ -236,6 +257,16 @@ function GLTFMesh({
         onClick={(e) => {
           e.stopPropagation();
           setSelected({ id: structureName, name: structureName, system, description, clinicalSignificance });
+        }}
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          const nativeEvent = e.nativeEvent as unknown as MouseEvent;
+          useAppStore.getState().setContextMenu({
+            x: (nativeEvent as any).clientX ?? 0,
+            y: (nativeEvent as any).clientY ?? 0,
+            name: structureName,
+            system,
+          });
         }}
       >
         <meshPhysicalMaterial

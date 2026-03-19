@@ -24,6 +24,7 @@ export function Effects() {
 
   const { outlineTargets, edgeColor, hiddenColor } = useMemo(() => {
     const names: string[] = [...highlightedStructures];
+    // Use bright system color for outline — hover gets white for max contrast
     let color = "#ffffff";
 
     if (selectedStructure) {
@@ -32,6 +33,8 @@ export function Effects() {
     }
     if (hoveredStructure && !names.includes(hoveredStructure)) {
       names.push(hoveredStructure);
+      // Hover outline is white for maximum visibility
+      if (!selectedStructure) color = "#ffffff";
     }
 
     const meshes: THREE.Mesh[] = [];

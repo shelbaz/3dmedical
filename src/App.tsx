@@ -8,6 +8,7 @@ import { SearchBar } from "./components/ui/SearchBar";
 import { QuizPanel } from "./components/ui/QuizPanel";
 import { ProcedurePanel } from "./components/ui/ProcedurePanel";
 import { CommandPalette } from "./components/ui/CommandPalette";
+import { ContextMenu } from "./components/ui/ContextMenu";
 import { useAppStore } from "./store/useAppStore";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useIsMobile } from "./hooks/useMediaQuery";
@@ -45,6 +46,8 @@ function Viewer() {
   const quizMode = useAppStore((s) => s.quizMode);
   const activeProcedure = useAppStore((s) => s.activeProcedure);
   const selectedStructure = useAppStore((s) => s.selectedStructure);
+  const contextMenu = useAppStore((s) => s.contextMenu);
+  const setContextMenu = useAppStore((s) => s.setContextMenu);
   const [layerDrawerOpen, setLayerDrawerOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("3dmed-welcomed"));
   const isMobile = useIsMobile();
@@ -153,6 +156,15 @@ function Viewer() {
         <SearchBar />
         <Toolbar />
         <CommandPalette />
+        {contextMenu && (
+          <ContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            structureName={contextMenu.name}
+            system={contextMenu.system}
+            onClose={() => setContextMenu(null)}
+          />
+        )}
         {showWelcome && !hasRightPanel && (
           <WelcomeHint onDismiss={() => { setShowWelcome(false); localStorage.setItem("3dmed-welcomed", "1"); }} />
         )}

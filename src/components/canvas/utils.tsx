@@ -31,6 +31,20 @@ const WARNING_COLOR = new THREE.Color("#ef4444");
 const BLACK = new THREE.Color("#000000");
 const _tmpColor = new THREE.Color();
 
+const HOVER_COLOR = new THREE.Color("#2563eb");
+
+const SELECT_COLORS: Record<AnatomicalSystem, THREE.Color> = {
+  skeletal: new THREE.Color("#fbbf24"),
+  muscular: new THREE.Color("#f43f5e"),
+  arterial: new THREE.Color("#ef4444"),
+  venous: new THREE.Color("#3b82f6"),
+  nervous: new THREE.Color("#facc15"),
+  lymphatic: new THREE.Color("#22c55e"),
+  organs: new THREE.Color("#ec4899"),
+  fascia: new THREE.Color("#a78bfa"),
+  spaces: new THREE.Color("#06b6d4"),
+};
+
 // ─── Geometry Helpers ────────────────────────────────────────
 
 export function makeTube(
@@ -201,21 +215,26 @@ export const Structure = memo(function Structure({
       mat.depthWrite = store.xRayMode ? targetDepthWrite : op >= 0.99;
     }
 
-    // Warning pulse — uses pre-allocated color
+    // Highlight — tint base color AND add emissive glow
+    const baseColor = _tmpColor.set(color);
     if (store.isWarning) {
-      const pulse = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
+      mat.color.copy(WARNING_COLOR);
       mat.emissive.copy(WARNING_COLOR);
-      mat.emissiveIntensity = pulse;
+      mat.emissiveIntensity = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
     } else if (store.highlightColor) {
+      mat.color.copy(baseColor);
       mat.emissive.set(store.highlightColor);
-      mat.emissiveIntensity = 0.3;
+      mat.emissiveIntensity = 0.4;
     } else if (store.isSelected) {
-      mat.emissive.set(color);
-      mat.emissiveIntensity = 0.5;
+      mat.color.copy(baseColor).lerp(SELECT_COLORS[system], 0.55);
+      mat.emissive.copy(SELECT_COLORS[system]);
+      mat.emissiveIntensity = 0.9;
     } else if (store.isHovered) {
-      mat.emissive.set(color);
-      mat.emissiveIntensity = 0.35;
+      mat.color.copy(baseColor).lerp(HOVER_COLOR, 0.45);
+      mat.emissive.copy(HOVER_COLOR);
+      mat.emissiveIntensity = 0.5;
     } else {
+      mat.color.copy(baseColor);
       mat.emissive.copy(BLACK);
       mat.emissiveIntensity = 0;
     }
@@ -246,6 +265,16 @@ export const Structure = memo(function Structure({
         onPointerOver={(e) => { e.stopPropagation(); setHover(name); document.body.style.cursor = "pointer"; }}
         onPointerOut={() => { setHover(null); document.body.style.cursor = "default"; }}
         onClick={(e) => { e.stopPropagation(); setSelected({ id: name, name, system, description, clinicalSignificance }); }}
+        onContextMenu={(e) => {
+          e.stopPropagation();
+          const nativeEvent = e.nativeEvent as unknown as MouseEvent;
+          useAppStore.getState().setContextMenu({
+            x: (nativeEvent as any).clientX ?? e.point.x,
+            y: (nativeEvent as any).clientY ?? e.point.y,
+            name,
+            system,
+          });
+        }}
       >
         {children}
         <meshPhysicalMaterial

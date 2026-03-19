@@ -52,6 +52,7 @@ export function Scene() {
       camera={{ position: [0, 2.5, 5.5], fov: 45 }}
       style={{ background: "#0a0a0f" }}
       gl={{ localClippingEnabled: true }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       <SceneContent />
     </Canvas>

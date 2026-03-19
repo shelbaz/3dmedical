@@ -74,6 +74,10 @@ interface AppState {
   // Command palette
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
+
+  // Context menu
+  contextMenu: { x: number; y: number; name: string; system: AnatomicalSystem } | null;
+  setContextMenu: (menu: { x: number; y: number; name: string; system: AnatomicalSystem } | null) => void;
 }
 
 const allSystemsVisible = (): Record<AnatomicalSystem, boolean> => ({
@@ -221,4 +225,7 @@ export const useAppStore = create<AppState>((set) => ({
   commandPaletteOpen: false,
   setCommandPaletteOpen: (open) =>
     set({ commandPaletteOpen: open, searchOpen: false }),
+
+  contextMenu: null,
+  setContextMenu: (menu) => set({ contextMenu: menu }),
 }));
