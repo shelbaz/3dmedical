@@ -241,6 +241,40 @@ export function OrganSystem() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// SUPPLEMENTARY ORGANS (not covered by GLTF model)
+// ═══════════════════════════════════════════════════════════════
+
+export function SupplementaryOrgans() {
+  const cervixGeo = useMemo(
+    () => makeLathe([
+      [0.0, 0.0], [0.12, 0.02], [0.13, 0.08], [0.12, 0.18], [0.11, 0.22], [0.0, 0.24],
+    ]), []
+  );
+  const vaginaGeo = useMemo(
+    () => makeTube([[0, -0.15, 0.05], [0, -0.35, 0.12], [0, -0.55, 0.22], [0, -0.75, 0.35], [0, -0.9, 0.48]], 0.1), []
+  );
+  const urethraGeo = useMemo(
+    () => makeTube([[0, -0.35, 0.82], [0, -0.5, 0.78], [0, -0.65, 0.72], [0, -0.82, 0.66]], 0.035), []
+  );
+  const rectumGeo = useMemo(
+    () => makeTube([[0, 0.7, -0.55], [0, 0.45, -0.65], [0, 0.2, -0.7], [0, -0.05, -0.68], [0, -0.3, -0.6], [0, -0.55, -0.52], [0, -0.75, -0.45]], 0.13, 48), []
+  );
+  const analCanalGeo = useMemo(
+    () => makeTube([[0, -0.75, -0.45], [0, -0.88, -0.43], [0, -1.0, -0.42]], 0.08), []
+  );
+
+  return (
+    <SystemGroup system="organs">
+      <Structure name="Cervix" system="organs" geometry={cervixGeo} position={[0, -0.4, 0.05]} color="#e8a090" roughness={0.45} description="Lower portion of the uterus. Squamocolumnar junction is where cervical neoplasia develops." clinicalSignificance="Critical surgical relationships: ureters 1-2cm laterally, uterine arteries cross superiorly." />
+      <Structure name="Vagina" system="organs" geometry={vaginaGeo} color="#f0b0a0" opacity={0.8} roughness={0.45} description="Fibromuscular canal ~7-10cm. DeLancey support: Level I (apex), II (mid — paravaginal), III (distal — perineal body)." clinicalSignificance="Posterior fornix is thinnest point to peritoneal cavity — used for culdocentesis." />
+      <Structure name="Urethra" system="organs" geometry={urethraGeo} color="#f9a8d4" roughness={0.45} description="Female urethra ~3-4cm. Courses through anterior vaginal wall." />
+      <Structure name="Rectum" system="organs" geometry={rectumGeo} color="#d4a08a" roughness={0.45} description="~12-15cm. Follows sacral curve. Surrounded by mesorectal fascia." clinicalSignificance="Total mesorectal excision (TME) dissects in the avascular plane between mesorectal and parietal pelvic fascia." />
+      <Structure name="Anal Canal" system="organs" geometry={analCanalGeo} color="#c49a80" roughness={0.45} description="~3-4cm. Dentate line divides upper (visceral innervation) from lower (somatic innervation)." clinicalSignificance="Above dentate: internal iliac node drainage. Below dentate: superficial inguinal node drainage." />
+    </SystemGroup>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // PELVIC SPACES SYSTEM
 // ═══════════════════════════════════════════════════════════════
 

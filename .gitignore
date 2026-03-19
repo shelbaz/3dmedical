@@ -29,8 +29,6 @@ yarn-error.log*
 # drizzle
 drizzle/meta/
 
-# 3D assets (large files - use R2 in production)
-public/models/*.glb
-public/models/*.gltf
-!public/models/.gitkeep
+# 3D asset source files (raw downloads)
+public/models/*/
 .playwright-mcp/
