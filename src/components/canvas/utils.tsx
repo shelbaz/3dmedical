@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, memo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+// Html tooltip removed — using fixed HoverLabel component instead
 import { useAppStore } from "../../store/useAppStore";
 import { useShallow } from "zustand/shallow";
 import type { AnatomicalSystem } from "../../types/anatomy";
@@ -250,8 +250,6 @@ export const Structure = memo(function Structure({
     clippingPlanes: clippingPlanes.length > 0 ? clippingPlanes : undefined,
   }), [system, roughness, metalness, clippingPlanes]);
 
-  const showTooltip = store.isHovered && !(store.quizMode === "identify" && store.quizTarget === name);
-
   // Don't raycast structures that are effectively invisible
   const isRaycastable = targetOpacity > 0.01;
 
@@ -285,29 +283,6 @@ export const Structure = memo(function Structure({
           {...matProps}
         />
       </mesh>
-      {/* Keep Html always mounted — toggle visibility to avoid DOM thrashing */}
-      <Html
-        center
-        distanceFactor={10}
-        style={{ pointerEvents: "none", visibility: showTooltip ? "visible" : "hidden" }}
-      >
-        <div
-          style={{
-            background: "rgba(8,8,14,0.88)",
-            border: "1px solid rgba(30,30,50,0.6)",
-            borderRadius: "4px",
-            padding: "2px 7px",
-            fontSize: "9px",
-            fontWeight: 500,
-            letterSpacing: "0.01em",
-            color: "#d0d0de",
-            whiteSpace: "nowrap",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-          }}
-        >
-          {name}
-        </div>
-      </Html>
     </group>
   );
 });

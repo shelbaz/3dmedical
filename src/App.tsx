@@ -9,6 +9,7 @@ import { QuizPanel } from "./components/ui/QuizPanel";
 import { ProcedurePanel } from "./components/ui/ProcedurePanel";
 import { CommandPalette } from "./components/ui/CommandPalette";
 import { ContextMenu } from "./components/ui/ContextMenu";
+import { HoverLabel } from "./components/ui/HoverLabel";
 import { useAppStore } from "./store/useAppStore";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useIsMobile } from "./hooks/useMediaQuery";
@@ -106,6 +107,7 @@ function Viewer() {
           <Scene />
           <SearchBar />
           <Toolbar />
+          <HoverLabel />
           <CommandPalette />
           {showWelcome && <WelcomeHint onDismiss={() => { setShowWelcome(false); localStorage.setItem("3dmed-welcomed", "1"); }} />}
         </div>

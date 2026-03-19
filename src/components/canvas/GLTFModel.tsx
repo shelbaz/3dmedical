@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useContext, memo } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+// Html tooltip removed — using fixed HoverLabel component instead
 import { useAppStore } from "../../store/useAppStore";
 import { useShallow } from "zustand/shallow";
 import { meshRegistry, ClippingPlanesContext } from "./utils";
@@ -280,23 +280,6 @@ function GLTFMesh({
           side={THREE.DoubleSide}
         />
       </mesh>
-      <Html
-          position={mesh.geometry.boundingSphere?.center ?? [0, 0, 0]}
-          center distanceFactor={8}
-          style={{
-            pointerEvents: "none",
-            visibility: store.isHovered && !(store.quizMode === "identify" && store.quizTarget === structureName) ? "visible" : "hidden",
-          }}
-        >
-          <div style={{
-            background: "rgba(8,8,14,0.88)", border: "1px solid rgba(30,30,50,0.6)",
-            borderRadius: "4px", padding: "2px 7px", fontSize: "9px", fontWeight: 500,
-            letterSpacing: "0.01em", color: "#d0d0de", whiteSpace: "nowrap",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
-          }}>
-            {structureName}
-          </div>
-        </Html>
     </>
   );
 }
