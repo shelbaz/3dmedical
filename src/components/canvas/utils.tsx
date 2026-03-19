@@ -233,10 +233,15 @@ export const Structure = memo(function Structure({
 
   const showTooltip = store.isHovered && !(store.quizMode === "identify" && store.quizTarget === name);
 
+  // Don't raycast structures that are effectively invisible
+  const isRaycastable = targetOpacity > 0.01;
+
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <mesh
         ref={meshRef}
+        visible={isRaycastable}
+        raycast={isRaycastable ? undefined : () => {}}
         geometry={geometry}
         onPointerOver={(e) => { e.stopPropagation(); setHover(name); document.body.style.cursor = "pointer"; }}
         onPointerOut={() => { setHover(null); document.body.style.cursor = "default"; }}
@@ -254,19 +259,21 @@ export const Structure = memo(function Structure({
       {/* Keep Html always mounted — toggle visibility to avoid DOM thrashing */}
       <Html
         center
-        distanceFactor={8}
+        distanceFactor={10}
         style={{ pointerEvents: "none", visibility: showTooltip ? "visible" : "hidden" }}
       >
         <div
           style={{
-            background: "rgba(10,10,18,0.92)",
-            border: "1px solid rgba(30,30,50,0.8)",
-            borderRadius: "6px",
-            padding: "4px 10px",
-            fontSize: "11px",
-            color: "#e4e4ef",
+            background: "rgba(8,8,14,0.88)",
+            border: "1px solid rgba(30,30,50,0.6)",
+            borderRadius: "4px",
+            padding: "2px 7px",
+            fontSize: "9px",
+            fontWeight: 500,
+            letterSpacing: "0.01em",
+            color: "#d0d0de",
             whiteSpace: "nowrap",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
           }}
         >
           {name}

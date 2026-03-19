@@ -221,11 +221,16 @@ function GLTFMesh({
     meshRef.current.visible = op > 0.003;
   });
 
+  // Don't raycast structures that are effectively invisible
+  const isRaycastable = targetOpacity > 0.01;
+
   return (
     <>
       <mesh
         ref={meshRef}
         geometry={mesh.geometry}
+        visible={isRaycastable}
+        raycast={isRaycastable ? undefined : () => {}}
         onPointerOver={(e) => { e.stopPropagation(); setHover(structureName); document.body.style.cursor = "pointer"; }}
         onPointerOut={() => { setHover(null); document.body.style.cursor = "default"; }}
         onClick={(e) => {
@@ -253,9 +258,10 @@ function GLTFMesh({
           }}
         >
           <div style={{
-            background: "rgba(10,10,18,0.92)", border: "1px solid rgba(30,30,50,0.8)",
-            borderRadius: "6px", padding: "4px 10px", fontSize: "11px",
-            color: "#e4e4ef", whiteSpace: "nowrap", boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+            background: "rgba(8,8,14,0.88)", border: "1px solid rgba(30,30,50,0.6)",
+            borderRadius: "4px", padding: "2px 7px", fontSize: "9px", fontWeight: 500,
+            letterSpacing: "0.01em", color: "#d0d0de", whiteSpace: "nowrap",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
           }}>
             {structureName}
           </div>
