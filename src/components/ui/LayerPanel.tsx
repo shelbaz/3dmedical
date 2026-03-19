@@ -1,0 +1,142 @@
+import { useAppStore } from "../../store/useAppStore";
+import {
+  SYSTEM_COLORS,
+  SYSTEM_LABELS,
+  type AnatomicalSystem,
+} from "../../types/anatomy";
+
+const SYSTEMS: AnatomicalSystem[] = [
+  "skeletal",
+  "muscular",
+  "arterial",
+  "venous",
+  "nervous",
+  "lymphatic",
+  "organs",
+  "fascia",
+  "spaces",
+];
+
+export function LayerPanel() {
+  const { visibleSystems, toggleSystem, showOnlySystem, showAllSystems } =
+    useAppStore();
+
+  return (
+    <div
+      className="w-[260px] flex flex-col border-r"
+      style={{
+        background: "var(--bg-secondary)",
+        borderColor: "var(--border)",
+      }}
+    >
+      <div
+        className="p-4 border-b flex items-center justify-between"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <h1 className="text-sm font-semibold tracking-wide uppercase">
+          Anatomical Layers
+        </h1>
+        <button
+          onClick={showAllSystems}
+          className="text-xs px-2 py-1 rounded hover:bg-[var(--bg-tertiary)] transition-colors"
+          style={{ color: "var(--accent)" }}
+        >
+          Show All
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {SYSTEMS.map((system) => (
+          <div
+            key={system}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-md cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors group"
+            onClick={() => toggleSystem(system)}
+          >
+            {/* Color indicator */}
+            <div
+              className="w-3 h-3 rounded-sm flex-shrink-0"
+              style={{
+                background: visibleSystems[system]
+                  ? SYSTEM_COLORS[system]
+                  : "var(--bg-tertiary)",
+                border: `1px solid ${SYSTEM_COLORS[system]}`,
+                opacity: visibleSystems[system] ? 1 : 0.4,
+              }}
+            />
+
+            {/* Checkbox */}
+            <input
+              type="checkbox"
+              checked={visibleSystems[system]}
+              onChange={() => toggleSystem(system)}
+              className="sr-only"
+            />
+            <div
+              className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
+              style={{
+                borderColor: visibleSystems[system]
+                  ? "var(--accent)"
+                  : "var(--border)",
+                background: visibleSystems[system]
+                  ? "var(--accent)"
+                  : "transparent",
+              }}
+            >
+              {visibleSystems[system] && (
+                <svg
+                  className="w-3 h-3 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </div>
+
+            {/* Label */}
+            <span
+              className="text-sm flex-1"
+              style={{
+                color: visibleSystems[system]
+                  ? "var(--text-primary)"
+                  : "var(--text-secondary)",
+              }}
+            >
+              {SYSTEM_LABELS[system]}
+            </span>
+
+            {/* Isolate button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                showOnlySystem(system);
+              }}
+              className="text-xs opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded hover:bg-[var(--bg-primary)]"
+              style={{ color: "var(--text-secondary)" }}
+              title={`Show only ${SYSTEM_LABELS[system]}`}
+            >
+              Solo
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="p-3 border-t text-xs"
+        style={{
+          borderColor: "var(--border)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        Toggle layers to isolate anatomical systems. Click "Solo" to view a
+        single system.
+      </div>
+    </div>
+  );
+}
