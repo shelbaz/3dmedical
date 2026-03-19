@@ -25,160 +25,122 @@ export function LayerPanel() {
 
   return (
     <div
-      className="w-[260px] flex flex-col border-r"
-      style={{
-        background: "var(--bg-secondary)",
-        borderColor: "var(--border)",
-      }}
+      className="w-[220px] flex flex-col"
+      style={{ background: "var(--bg-secondary)" }}
     >
-      <div
-        className="p-4 border-b flex items-center justify-between"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <h1 className="text-sm font-semibold tracking-wide uppercase">
-          Anatomical Layers
-        </h1>
+      {/* Header */}
+      <div className="px-4 pt-5 pb-3 flex items-center justify-between">
+        <span
+          className="text-[10px] font-semibold tracking-[0.12em] uppercase"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          Systems
+        </span>
         <button
           onClick={showAllSystems}
-          className="text-xs px-2 py-1 rounded hover:bg-[var(--bg-tertiary)] transition-colors"
+          className="text-[10px] font-medium px-2 py-0.5 rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
           style={{ color: "var(--accent)" }}
         >
           Show All
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {SYSTEMS.map((system, i) => (
-          <div key={system}>
-            <div
-              className="flex items-center gap-2 px-3 py-2.5 rounded-md cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors group"
-              onClick={() => toggleSystem(system)}
-            >
-              {/* Color indicator */}
-              <div
-                className="w-3 h-3 rounded-sm flex-shrink-0"
-                style={{
-                  background: visibleSystems[system]
-                    ? SYSTEM_COLORS[system]
-                    : "var(--bg-tertiary)",
-                  border: `1px solid ${SYSTEM_COLORS[system]}`,
-                  opacity: visibleSystems[system] ? 1 : 0.4,
-                }}
-              />
+      {/* System list */}
+      <div className="flex-1 overflow-y-auto px-2 pb-2">
+        {SYSTEMS.map((system, i) => {
+          const active = visibleSystems[system];
+          const color = SYSTEM_COLORS[system];
 
-              {/* Checkbox */}
-              <input
-                type="checkbox"
-                checked={visibleSystems[system]}
-                onChange={() => toggleSystem(system)}
-                className="sr-only"
-              />
-              <div
-                className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0"
-                style={{
-                  borderColor: visibleSystems[system]
-                    ? "var(--accent)"
-                    : "var(--border)",
-                  background: visibleSystems[system]
-                    ? "var(--accent)"
-                    : "transparent",
-                }}
-              >
-                {visibleSystems[system] && (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </div>
-
-              {/* Label */}
-              <span
-                className="text-sm flex-1"
-                style={{
-                  color: visibleSystems[system]
-                    ? "var(--text-primary)"
-                    : "var(--text-secondary)",
-                }}
-              >
-                {SYSTEM_LABELS[system]}
-              </span>
-
-              {/* Shortcut hint */}
-              <kbd
-                className="text-[9px] px-1 py-0.5 rounded opacity-0 group-hover:opacity-60 transition-opacity"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  color: "var(--text-secondary)",
-                }}
-              >
-                {i + 1}
-              </kbd>
-
-              {/* Isolate button */}
+          return (
+            <div key={system} className="mb-0.5">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  showOnlySystem(system);
+                onClick={() => toggleSystem(system)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group"
+                style={{
+                  background: active ? `${color}08` : "transparent",
                 }}
-                className="text-xs opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded hover:bg-[var(--bg-primary)]"
-                style={{ color: "var(--text-secondary)" }}
-                title={`Show only ${SYSTEM_LABELS[system]}`}
               >
-                Solo
-              </button>
-            </div>
+                {/* Toggle dot */}
+                <div className="relative flex-shrink-0">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full transition-all"
+                    style={{
+                      background: active ? color : "transparent",
+                      border: `1.5px solid ${active ? color : "var(--text-tertiary)"}`,
+                      boxShadow: active ? `0 0 8px ${color}40` : "none",
+                    }}
+                  />
+                </div>
 
-            {/* Opacity slider — visible when system is on */}
-            {visibleSystems[system] && (
-              <div className="flex items-center gap-2 px-3 pb-1.5 pl-12">
-                <input
-                  type="range"
-                  min={0.1}
-                  max={1}
-                  step={0.05}
-                  value={systemOpacity[system]}
-                  onChange={(e) =>
-                    setSystemOpacity(system, parseFloat(e.target.value))
-                  }
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
-                  style={
-                    {
-                      accentColor: SYSTEM_COLORS[system],
-                      background: `linear-gradient(to right, ${SYSTEM_COLORS[system]}40, ${SYSTEM_COLORS[system]})`,
-                    } as React.CSSProperties
-                  }
-                />
+                {/* Label */}
                 <span
-                  className="text-[10px] w-7 text-right"
-                  style={{ color: "var(--text-secondary)" }}
+                  className="text-[13px] font-medium flex-1 text-left transition-colors"
+                  style={{
+                    color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                  }}
                 >
-                  {Math.round(systemOpacity[system] * 100)}%
+                  {SYSTEM_LABELS[system]}
                 </span>
-              </div>
-            )}
-          </div>
-        ))}
+
+                {/* Shortcut + Solo on hover */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span
+                    className="text-[9px] font-mono px-1 rounded"
+                    style={{ color: "var(--text-tertiary)" }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    onClick={(e) => { e.stopPropagation(); showOnlySystem(system); }}
+                    className="text-[9px] font-medium px-1.5 py-0.5 rounded hover:bg-[var(--bg-elevated)] cursor-pointer"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    solo
+                  </span>
+                </div>
+              </button>
+
+              {/* Opacity slider */}
+              {active && (
+                <div className="flex items-center gap-2.5 pl-8 pr-3 pb-2 pt-0.5">
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    value={systemOpacity[system]}
+                    onChange={(e) =>
+                      setSystemOpacity(system, parseFloat(e.target.value))
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1"
+                    style={{
+                      background: `linear-gradient(to right, ${color}30 0%, ${color} ${systemOpacity[system] * 100}%, var(--bg-tertiary) ${systemOpacity[system] * 100}%)`,
+                    }}
+                  />
+                  <span
+                    className="text-[10px] tabular-nums w-7 text-right"
+                    style={{ color: "var(--text-tertiary)" }}
+                  >
+                    {Math.round(systemOpacity[system] * 100)}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div
-        className="p-3 border-t text-xs"
-        style={{
-          borderColor: "var(--border)",
-          color: "var(--text-secondary)",
-        }}
-      >
-        Toggle layers to isolate anatomical systems. Press <kbd className="px-1 py-0.5 rounded text-[10px]" style={{ background: "rgba(255,255,255,0.06)" }}>/</kbd> to search.
+      {/* Footer */}
+      <div className="px-4 py-3">
+        <div
+          className="text-[10px] leading-relaxed"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          <kbd className="px-1 py-px rounded text-[9px]" style={{ background: "var(--bg-tertiary)" }}>/</kbd> search
+          {" "}&middot;{" "}
+          <kbd className="px-1 py-px rounded text-[9px]" style={{ background: "var(--bg-tertiary)" }}>Cmd K</kbd> commands
+        </div>
       </div>
     </div>
   );

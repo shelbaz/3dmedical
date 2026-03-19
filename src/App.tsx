@@ -16,7 +16,6 @@ function Viewer() {
   const activeProcedure = useAppStore((s) => s.activeProcedure);
   useKeyboardShortcuts();
 
-  // Right panel: quiz > procedure > detail
   const rightPanel =
     quizMode !== "off" ? (
       <QuizPanel />
@@ -34,11 +33,6 @@ function Viewer() {
         <SearchBar />
         <Toolbar />
         <CommandPalette />
-        <div className="absolute top-4 left-4 text-xs text-[var(--text-secondary)]">
-          Click + drag to rotate | Scroll to zoom |{" "}
-          <kbd className="px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.06)" }}>/</kbd> search |{" "}
-          <kbd className="px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.06)" }}>Cmd+K</kbd> commands
-        </div>
       </div>
       {rightPanel}
     </div>

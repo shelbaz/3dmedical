@@ -20,6 +20,40 @@ const CLIP_ORIENTATIONS: {
   { id: "axial", label: "Axl" },
 ];
 
+function ToolbarButton({
+  active,
+  accent,
+  onClick,
+  children,
+  title,
+}: {
+  active?: boolean;
+  accent?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+  title?: string;
+}) {
+  const color = accent ?? "#4a9eff";
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className="px-3 h-8 rounded-lg text-[11px] font-semibold tracking-wide transition-all"
+      style={{
+        background: active ? `${color}18` : "transparent",
+        color: active ? color : "var(--text-secondary)",
+        border: active ? `1px solid ${color}30` : "1px solid transparent",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <div className="w-px h-5 mx-0.5" style={{ background: "var(--border)" }} />;
+}
+
 export function Toolbar() {
   const setCameraPreset = useAppStore((s) => s.setCameraPreset);
   const xRayMode = useAppStore((s) => s.xRayMode);
@@ -33,115 +67,97 @@ export function Toolbar() {
   const quizMode = useAppStore((s) => s.quizMode);
 
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-2 rounded-xl"
+    <div
+      className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-1.5 rounded-2xl"
       style={{
-        background: "rgba(18,18,26,0.9)",
-        border: "1px solid rgba(42,42,62,0.8)",
-        backdropFilter: "blur(12px)",
+        background: "rgba(10,10,18,0.85)",
+        border: "1px solid rgba(30,30,50,0.6)",
+        backdropFilter: "blur(20px)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
     >
       {/* Camera presets */}
-      {CAMERA_PRESETS.map((preset) => (
-        <button
-          key={preset.id}
-          onClick={() => setCameraPreset(preset.id)}
-          title={preset.title}
-          className="w-8 h-8 rounded-lg text-xs font-bold transition-colors hover:bg-[rgba(255,255,255,0.1)]"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          {preset.label}
-        </button>
-      ))}
+      <div className="flex items-center gap-0.5 px-1">
+        {CAMERA_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            onClick={() => setCameraPreset(preset.id)}
+            title={preset.title}
+            className="w-7 h-7 rounded-md text-[11px] font-bold transition-all hover:bg-[rgba(255,255,255,0.08)] active:scale-90"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
 
-      <div className="w-px h-6 mx-1" style={{ background: "var(--border)" }} />
+      <Divider />
 
-      {/* X-Ray toggle */}
-      <button
-        onClick={toggleXRayMode}
-        title="X-Ray Mode"
-        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors"
-        style={{
-          background: xRayMode ? "rgba(59,130,246,0.25)" : "transparent",
-          color: xRayMode ? "#60a5fa" : "var(--text-secondary)",
-          border: xRayMode ? "1px solid rgba(59,130,246,0.4)" : "1px solid transparent",
-        }}
-      >
-        X-Ray
-      </button>
+      {/* Modes */}
+      <div className="flex items-center gap-0.5 px-0.5">
+        <ToolbarButton active={xRayMode} onClick={toggleXRayMode} title="X-Ray Mode">
+          X-Ray
+        </ToolbarButton>
+        <ToolbarButton active={clippingEnabled} onClick={toggleClipping} title="Cross-Section">
+          Clip
+        </ToolbarButton>
+      </div>
 
-      {/* Clipping toggle */}
-      <button
-        onClick={toggleClipping}
-        title="Cross-Section"
-        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors"
-        style={{
-          background: clippingEnabled ? "rgba(59,130,246,0.25)" : "transparent",
-          color: clippingEnabled ? "#60a5fa" : "var(--text-secondary)",
-          border: clippingEnabled ? "1px solid rgba(59,130,246,0.4)" : "1px solid transparent",
-        }}
-      >
-        Clip
-      </button>
-
-      {/* Clipping controls (shown when clipping is enabled) */}
+      {/* Clipping controls */}
       {clippingEnabled && (
         <>
-          <div className="w-px h-6 mx-1" style={{ background: "var(--border)" }} />
-          {CLIP_ORIENTATIONS.map((o) => (
-            <button
-              key={o.id}
-              onClick={() => setClippingOrientation(o.id)}
-              className="px-2 h-7 rounded text-[10px] font-medium transition-colors"
-              style={{
-                background:
-                  clippingOrientation === o.id
-                    ? "rgba(255,255,255,0.12)"
-                    : "transparent",
-                color:
-                  clippingOrientation === o.id
-                    ? "var(--text-primary)"
-                    : "var(--text-secondary)",
-              }}
-            >
-              {o.label}
-            </button>
-          ))}
-          <input
-            type="range"
-            min={-2}
-            max={2}
-            step={0.01}
-            value={clippingPosition}
-            onChange={(e) => setClippingPosition(parseFloat(e.target.value))}
-            className="w-20 h-1 mx-1 accent-blue-500"
-            title={`Position: ${clippingPosition.toFixed(2)}`}
-          />
+          <Divider />
+          <div className="flex items-center gap-0.5 px-0.5">
+            {CLIP_ORIENTATIONS.map((o) => (
+              <button
+                key={o.id}
+                onClick={() => setClippingOrientation(o.id)}
+                className="px-2 h-6 rounded-md text-[10px] font-semibold transition-all"
+                style={{
+                  background: clippingOrientation === o.id ? "rgba(255,255,255,0.1)" : "transparent",
+                  color: clippingOrientation === o.id ? "var(--text-primary)" : "var(--text-tertiary)",
+                }}
+              >
+                {o.label}
+              </button>
+            ))}
+            <input
+              type="range"
+              min={-2}
+              max={2}
+              step={0.01}
+              value={clippingPosition}
+              onChange={(e) => setClippingPosition(parseFloat(e.target.value))}
+              className="w-16 mx-1"
+              style={{ background: `linear-gradient(to right, var(--accent)30 0%, var(--accent) 50%, var(--bg-tertiary) 50%)` }}
+              title={`Position: ${clippingPosition.toFixed(2)}`}
+            />
+          </div>
         </>
       )}
 
-      <div className="w-px h-6 mx-1" style={{ background: "var(--border)" }} />
+      <Divider />
 
-      {/* Quiz */}
-      <button
-        onClick={() => useAppStore.getState().setQuizMode("identify")}
-        title="Quiz Mode"
-        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.1)]"
-        style={{ color: quizMode !== "off" ? "#22c55e" : "var(--text-secondary)" }}
-      >
-        Quiz
-      </button>
+      {/* Study tools */}
+      <div className="flex items-center gap-0.5 px-0.5">
+        <ToolbarButton
+          active={quizMode !== "off"}
+          accent="#22c55e"
+          onClick={() => useAppStore.getState().setQuizMode(quizMode === "off" ? "identify" : "off")}
+          title="Quiz Mode"
+        >
+          Quiz
+        </ToolbarButton>
+        <ProcedureButton />
+      </div>
 
-      {/* Procedures */}
-      <ProcedureButton />
+      <Divider />
 
-      <div className="w-px h-6 mx-1" style={{ background: "var(--border)" }} />
-
-      {/* Reset view */}
       <button
         onClick={() => setCameraPreset("anterior")}
         title="Reset View"
-        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.1)]"
-        style={{ color: "var(--text-secondary)" }}
+        className="px-2.5 h-7 rounded-md text-[10px] font-medium transition-all hover:bg-[rgba(255,255,255,0.06)]"
+        style={{ color: "var(--text-tertiary)" }}
       >
         Reset
       </button>
@@ -155,14 +171,14 @@ function ProcedureButton() {
 
   return (
     <>
-      <button
+      <ToolbarButton
+        active={!!activeProcedure}
+        accent="#a78bfa"
         onClick={() => setShowSelector(!showSelector)}
         title="Surgical Procedures"
-        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.1)]"
-        style={{ color: activeProcedure ? "#60a5fa" : "var(--text-secondary)" }}
       >
         Procedures
-      </button>
+      </ToolbarButton>
       {showSelector && <ProcedureSelector onClose={() => setShowSelector(false)} />}
     </>
   );
