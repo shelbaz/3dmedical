@@ -304,29 +304,29 @@ export function NervousSystem() {
 // LYMPHATIC SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
+// NodeChain at module scope to avoid unmount/remount on re-render
+function NodeChain({ name, system, positions, color, description, clinicalSignificance }: {
+  name: string;
+  system: "lymphatic";
+  positions: [number, number, number][];
+  color: string;
+  description?: string;
+  clinicalSignificance?: string;
+}) {
+  return (
+    <>
+      {positions.map((pos, i) => (
+        <Structure key={i} name={i === 0 ? name : `${name} (${i + 1})`} system={system} position={pos} color={color} roughness={0.5} description={i === 0 ? description : undefined} clinicalSignificance={i === 0 ? clinicalSignificance : undefined}>
+          <sphereGeometry args={[0.04, 10, 10]} />
+        </Structure>
+      ))}
+    </>
+  );
+}
+
 export function LymphaticSystem() {
   const green = "#22c55e";
   const darkGreen = "#16a34a";
-
-  // Helper: chain of small spheres along a path
-  function NodeChain({ name, system, positions, color, description, clinicalSignificance }: {
-    name: string;
-    system: "lymphatic";
-    positions: [number, number, number][];
-    color: string;
-    description?: string;
-    clinicalSignificance?: string;
-  }) {
-    return (
-      <>
-        {positions.map((pos, i) => (
-          <Structure key={i} name={i === 0 ? name : `${name} (${i + 1})`} system={system} position={pos} color={color} roughness={0.5} description={i === 0 ? description : undefined} clinicalSignificance={i === 0 ? clinicalSignificance : undefined}>
-            <sphereGeometry args={[0.04, 10, 10]} />
-          </Structure>
-        ))}
-      </>
-    );
-  }
 
   return (
     <SystemGroup system="lymphatic">

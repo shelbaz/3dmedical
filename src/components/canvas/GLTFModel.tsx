@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef, useContext } from "react";
+import { useEffect, useMemo, useRef, useContext, memo } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { useAppStore } from "../../store/useAppStore";
+import { useShallow } from "zustand/shallow";
 import { meshRegistry, ClippingPlanesContext } from "./utils";
 import type { AnatomicalSystem } from "../../types/anatomy";
+
+const WARNING_COLOR = new THREE.Color("#ef4444");
+const BLACK = new THREE.Color("#000000");
 
 // ─── Mesh-to-structure mapping by index ────────────────────
 // Derived from MRI model "Bony Pelvis, Supply, Organs from MRI"
@@ -129,32 +133,47 @@ function GLTFMesh({
   clinicalSignificance?: string;
   originalColor: THREE.Color;
 }) {
-  const isHovered = useAppStore((s) => s.hoveredStructure === structureName);
-  const isSelected = useAppStore((s) => s.selectedStructure?.name === structureName);
+  // Single batched selector — 1 subscription instead of 10
+  const store = useAppStore(
+    useShallow((s) => ({
+      isHovered: s.hoveredStructure === structureName,
+      isSelected: s.selectedStructure?.name === structureName,
+      xRayMode: s.xRayMode,
+      systemVisible: s.visibleSystems[system],
+      systemOpacity: s.systemOpacity[system],
+      isWarning: s.warningStructures.includes(structureName),
+      highlightColor: s.highlightColors[structureName] as string | undefined,
+      quizMode: s.quizMode,
+      quizTarget: s.quizTarget,
+    }))
+  );
   const setHover = useAppStore((s) => s.setHoveredStructure);
   const setSelected = useAppStore((s) => s.setSelectedStructure);
-  const xRayMode = useAppStore((s) => s.xRayMode);
-  const systemVisible = useAppStore((s) => s.visibleSystems[system]);
-  const systemOpacity = useAppStore((s) => s.systemOpacity[system]);
-  const isWarning = useAppStore((s) => s.warningStructures.includes(structureName));
-  const highlightColor = useAppStore((s) => s.highlightColors[structureName]);
-  const quizMode = useAppStore((s) => s.quizMode);
-  const quizTarget = useAppStore((s) => s.quizTarget);
   const clippingPlanes = useContext(ClippingPlanesContext);
 
   const meshRef = useRef<THREE.Mesh>(null!);
-  const currentOpacity = useRef(systemVisible ? systemOpacity : 0);
+  const currentOpacity = useRef(store.systemVisible ? store.systemOpacity : 0);
+  const prevTransparent = useRef(true);
 
   useEffect(() => {
     if (meshRef.current) meshRegistry.set(structureName, meshRef.current);
     return () => { meshRegistry.delete(structureName); };
   }, [structureName]);
 
+  // Set clipping planes only when they change
+  useEffect(() => {
+    if (meshRef.current) {
+      const mat = meshRef.current.material as THREE.MeshPhysicalMaterial;
+      mat.clippingPlanes = clippingPlanes.length > 0 ? clippingPlanes : null;
+      mat.needsUpdate = true;
+    }
+  }, [clippingPlanes]);
+
   let targetOpacity: number;
-  if (xRayMode) {
-    targetOpacity = isSelected ? 1.0 : isHovered ? 0.5 : 0.12;
+  if (store.xRayMode) {
+    targetOpacity = store.isSelected ? 1.0 : store.isHovered ? 0.5 : 0.12;
   } else {
-    targetOpacity = systemVisible ? systemOpacity : 0;
+    targetOpacity = store.systemVisible ? store.systemOpacity : 0;
   }
 
   useFrame(({ clock }, delta) => {
@@ -168,28 +187,34 @@ function GLTFMesh({
     }
     const op = currentOpacity.current;
     mat.opacity = op;
-    mat.transparent = true;
     mat.depthWrite = op >= 0.9;
-    mat.side = THREE.DoubleSide;
 
-    if (isWarning) {
-      mat.emissive.set("#ef4444");
+    // Only trigger needsUpdate when transparent state changes
+    const newTransparent = op < 0.9;
+    if (newTransparent !== prevTransparent.current) {
+      mat.transparent = true; // always transparent for animation
+      mat.needsUpdate = true;
+      prevTransparent.current = newTransparent;
+    }
+
+    // Emissive — uses pre-allocated colors
+    if (store.isWarning) {
+      mat.emissive.copy(WARNING_COLOR);
       mat.emissiveIntensity = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
-    } else if (highlightColor) {
-      mat.emissive.set(highlightColor);
+    } else if (store.highlightColor) {
+      mat.emissive.set(store.highlightColor);
       mat.emissiveIntensity = 0.3;
-    } else if (isHovered) {
-      mat.emissive.set(originalColor);
+    } else if (store.isHovered) {
+      mat.emissive.copy(originalColor);
       mat.emissiveIntensity = 0.3;
-    } else if (isSelected) {
-      mat.emissive.set(originalColor);
+    } else if (store.isSelected) {
+      mat.emissive.copy(originalColor);
       mat.emissiveIntensity = 0.15;
     } else {
+      mat.emissive.copy(BLACK);
       mat.emissiveIntensity = 0;
     }
 
-    if (clippingPlanes.length > 0) mat.clippingPlanes = clippingPlanes;
-    mat.needsUpdate = true;
     meshRef.current.visible = op > 0.003;
   });
 
@@ -216,11 +241,13 @@ function GLTFMesh({
           side={THREE.DoubleSide}
         />
       </mesh>
-      {isHovered && !(quizMode === "identify" && quizTarget === structureName) && (
-        <Html
+      <Html
           position={mesh.geometry.boundingSphere?.center ?? [0, 0, 0]}
           center distanceFactor={8}
-          style={{ pointerEvents: "none" }}
+          style={{
+            pointerEvents: "none",
+            visibility: store.isHovered && !(store.quizMode === "identify" && store.quizTarget === structureName) ? "visible" : "hidden",
+          }}
         >
           <div style={{
             background: "rgba(10,10,18,0.92)", border: "1px solid rgba(30,30,50,0.8)",
@@ -230,7 +257,6 @@ function GLTFMesh({
             {structureName}
           </div>
         </Html>
-      )}
     </>
   );
 }

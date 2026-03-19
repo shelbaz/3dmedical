@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, memo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import { useAppStore } from "../../store/useAppStore";
+import { useShallow } from "zustand/shallow";
 import type { AnatomicalSystem } from "../../types/anatomy";
 
 // ─── Mesh Registry (for Outline effect) ─────────────────────
@@ -23,6 +24,12 @@ const SystemOpacityContext = createContext<SystemCtx>({
   targetVisible: true,
   systemOpacity: 1,
 });
+
+// ─── Pre-allocated colors (avoid GC pressure in useFrame) ───
+
+const WARNING_COLOR = new THREE.Color("#ef4444");
+const BLACK = new THREE.Color("#000000");
+const _tmpColor = new THREE.Color();
 
 // ─── Geometry Helpers ────────────────────────────────────────
 
@@ -107,7 +114,7 @@ interface StructureProps {
   children?: React.ReactNode;
 }
 
-export function Structure({
+export const Structure = memo(function Structure({
   name,
   system,
   position,
@@ -122,20 +129,27 @@ export function Structure({
   clinicalSignificance,
   children,
 }: StructureProps) {
-  const isHovered = useAppStore((s) => s.hoveredStructure === name);
-  const isSelected = useAppStore((s) => s.selectedStructure?.name === name);
+  // Single batched selector — 1 subscription instead of 8
+  const store = useAppStore(
+    useShallow((s) => ({
+      isHovered: s.hoveredStructure === name,
+      isSelected: s.selectedStructure?.name === name,
+      xRayMode: s.xRayMode,
+      isWarning: s.warningStructures.includes(name),
+      highlightColor: s.highlightColors[name] as string | undefined,
+      quizMode: s.quizMode,
+      quizTarget: s.quizTarget,
+    }))
+  );
   const setHover = useAppStore((s) => s.setHoveredStructure);
   const setSelected = useAppStore((s) => s.setSelectedStructure);
-  const xRayMode = useAppStore((s) => s.xRayMode);
   const clippingPlanes = useContext(ClippingPlanesContext);
-  const isWarning = useAppStore((s) => s.warningStructures.includes(name));
-  const highlightColor = useAppStore((s) => s.highlightColors[name]);
-  const quizMode = useAppStore((s) => s.quizMode);
-  const quizTarget = useAppStore((s) => s.quizTarget);
-
   const { targetVisible, systemOpacity } = useContext(SystemOpacityContext);
+
   const meshRef = useRef<THREE.Mesh>(null!);
   const currentOpacity = useRef(targetVisible ? (opacity ?? 1) * systemOpacity : 0);
+  const prevTransparent = useRef(true);
+  const prevSide = useRef<THREE.Side>(THREE.DoubleSide);
 
   // Register mesh for outline effect
   useEffect(() => {
@@ -148,15 +162,15 @@ export function Structure({
   // Compute target opacity
   let targetOpacity: number;
   let targetDepthWrite: boolean;
-  if (xRayMode) {
-    targetOpacity = isSelected ? 1.0 : isHovered ? 0.5 : 0.12;
-    targetDepthWrite = isSelected;
+  if (store.xRayMode) {
+    targetOpacity = store.isSelected ? 1.0 : store.isHovered ? 0.5 : 0.12;
+    targetDepthWrite = store.isSelected;
   } else {
     targetOpacity = targetVisible ? systemOpacity * localOpacity : 0;
     targetDepthWrite = targetOpacity >= 0.99;
   }
 
-  // Smooth opacity animation + warning pulse via useFrame
+  // Per-frame animation — reads store imperatively for hot-path values
   useFrame(({ clock }, delta) => {
     if (!meshRef.current) return;
     const mat = meshRef.current.material as THREE.MeshStandardMaterial;
@@ -168,137 +182,95 @@ export function Structure({
     }
     const op = currentOpacity.current;
     mat.opacity = op;
-    mat.transparent = op < 0.99;
-    mat.depthWrite = xRayMode ? targetDepthWrite : op >= 0.99;
-    mat.side = op < 0.99 ? THREE.DoubleSide : THREE.FrontSide;
 
-    // Warning pulse (red glow for at-risk structures)
-    if (isWarning) {
-      const pulse = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
-      mat.emissive = new THREE.Color("#ef4444");
-      mat.emissiveIntensity = pulse;
+    // Only set needsUpdate when transparent/side actually changes
+    const newTransparent = op < 0.99;
+    const newSide = op < 0.99 ? THREE.DoubleSide : THREE.FrontSide;
+    if (newTransparent !== prevTransparent.current || newSide !== prevSide.current) {
+      mat.transparent = newTransparent;
+      mat.side = newSide;
+      mat.depthWrite = store.xRayMode ? targetDepthWrite : op >= 0.99;
+      mat.needsUpdate = true;
+      prevTransparent.current = newTransparent;
+      prevSide.current = newSide;
+    } else {
+      mat.depthWrite = store.xRayMode ? targetDepthWrite : op >= 0.99;
     }
 
-    mat.needsUpdate = true;
+    // Warning pulse — uses pre-allocated color
+    if (store.isWarning) {
+      const pulse = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
+      mat.emissive.copy(WARNING_COLOR);
+      mat.emissiveIntensity = pulse;
+    } else if (store.highlightColor) {
+      mat.emissive.set(store.highlightColor);
+      mat.emissiveIntensity = 0.3;
+    } else if (store.isHovered) {
+      mat.emissive.set(color);
+      mat.emissiveIntensity = 0.35;
+    } else if (store.isSelected) {
+      mat.emissive.set(color);
+      mat.emissiveIntensity = 0.15;
+    } else {
+      mat.emissive.copy(BLACK);
+      mat.emissiveIntensity = 0;
+    }
+
     meshRef.current.visible = op > 0.003;
   });
 
-  // Material color — warning overrides, then highlight color, then normal
-  const materialColor = isWarning
-    ? "#ef4444"
-    : highlightColor
-    ? highlightColor
-    : isHovered && !xRayMode
-    ? "#ffffff"
-    : color;
-  const emissive = isWarning
-    ? "#ef4444"
-    : highlightColor ?? (isHovered ? color : "#000000");
-  const emissiveIntensity = isWarning
-    ? 0.35
-    : highlightColor
-    ? 0.3
-    : isHovered
-    ? 0.35
-    : isSelected
-    ? 0.15
-    : 0;
-
-  // Common material props
-  const baseMaterialProps = {
-    color: materialColor,
-    emissive,
-    emissiveIntensity,
-    transparent: true,
-    opacity: currentOpacity.current,
-    roughness: roughness ?? 0.5,
-    metalness: metalness ?? 0.05,
-    side: currentOpacity.current < 0.99 ? THREE.DoubleSide : THREE.FrontSide,
-    depthWrite: currentOpacity.current >= 0.99,
+  // Stable material — only varies by system type (not per-frame values)
+  const matProps = useMemo(() => ({
+    roughness: roughness ?? (system === "organs" ? 0.45 : system === "skeletal" ? 0.8 : system === "arterial" || system === "venous" ? 0.3 : 0.5),
+    metalness: metalness ?? (system === "arterial" || system === "venous" ? 0.1 : 0.05),
+    clearcoat: system === "organs" ? 0.3 : system === "skeletal" ? 0.1 : 0,
     clippingPlanes: clippingPlanes.length > 0 ? clippingPlanes : undefined,
-  };
+  }), [system, roughness, metalness, clippingPlanes]);
 
-  // Choose material based on system
-  const renderMaterial = () => {
-    if (system === "organs") {
-      return (
-        <meshPhysicalMaterial
-          {...baseMaterialProps}
-          roughness={roughness ?? 0.45}
-          transmission={xRayMode ? 0 : 0.15}
-          thickness={0.5}
-          clearcoat={0.3}
-          clearcoatRoughness={0.4}
-        />
-      );
-    }
-    if (system === "skeletal") {
-      return (
-        <meshPhysicalMaterial
-          {...baseMaterialProps}
-          roughness={roughness ?? 0.8}
-          clearcoat={0.1}
-          clearcoatRoughness={0.5}
-        />
-      );
-    }
-    if (system === "arterial" || system === "venous") {
-      return (
-        <meshStandardMaterial
-          {...baseMaterialProps}
-          roughness={roughness ?? 0.3}
-          metalness={metalness ?? 0.1}
-        />
-      );
-    }
-    return <meshStandardMaterial {...baseMaterialProps} />;
-  };
+  const showTooltip = store.isHovered && !(store.quizMode === "identify" && store.quizTarget === name);
 
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <mesh
         ref={meshRef}
         geometry={geometry}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHover(name);
-          document.body.style.cursor = "pointer";
-        }}
-        onPointerOut={() => {
-          setHover(null);
-          document.body.style.cursor = "default";
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          // In quiz locate mode, clicking always goes through setSelected
-          // The QuizPanel listens for selectedStructure changes
-          setSelected({ id: name, name, system, description, clinicalSignificance });
-        }}
+        onPointerOver={(e) => { e.stopPropagation(); setHover(name); document.body.style.cursor = "pointer"; }}
+        onPointerOut={() => { setHover(null); document.body.style.cursor = "default"; }}
+        onClick={(e) => { e.stopPropagation(); setSelected({ id: name, name, system, description, clinicalSignificance }); }}
       >
         {children}
-        {renderMaterial()}
+        <meshPhysicalMaterial
+          color={color}
+          transparent
+          opacity={1}
+          side={THREE.DoubleSide}
+          {...matProps}
+        />
       </mesh>
-      {isHovered && !(quizMode === "identify" && quizTarget === name) && (
-        <Html center distanceFactor={8} style={{ pointerEvents: "none" }}>
-          <div
-            style={{
-              background: "rgba(18,18,26,0.92)",
-              border: "1px solid rgba(42,42,62,0.8)",
-              borderRadius: "4px",
-              padding: "4px 10px",
-              fontSize: "11px",
-              color: "#e0e0e8",
-              whiteSpace: "nowrap",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
-            }}
-          >
-            {name}
-          </div>
-        </Html>
-      )}
+      {/* Keep Html always mounted — toggle visibility to avoid DOM thrashing */}
+      <Html
+        center
+        distanceFactor={8}
+        style={{ pointerEvents: "none", visibility: showTooltip ? "visible" : "hidden" }}
+      >
+        <div
+          style={{
+            background: "rgba(10,10,18,0.92)",
+            border: "1px solid rgba(30,30,50,0.8)",
+            borderRadius: "6px",
+            padding: "4px 10px",
+            fontSize: "11px",
+            color: "#e4e4ef",
+            whiteSpace: "nowrap",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+          }}
+        >
+          {name}
+        </div>
+      </Html>
     </group>
   );
-}
+});
 
 // ─── System Group Wrapper ────────────────────────────────────
 

@@ -1,5 +1,6 @@
 import { useAppStore } from "../../store/useAppStore";
 import { SYSTEM_COLORS } from "../../types/anatomy";
+import { useShallow } from "zustand/shallow";
 import {
   EffectComposer,
   Outline,
@@ -12,11 +13,16 @@ import { useMemo } from "react";
 import { meshRegistry } from "./utils";
 
 export function Effects() {
-  const hoveredStructure = useAppStore((s) => s.hoveredStructure);
-  const selectedStructure = useAppStore((s) => s.selectedStructure);
-  const highlightedStructures = useAppStore((s) => s.highlightedStructures);
+  // Single batched selector
+  const { hoveredStructure, selectedStructure, highlightedStructures } = useAppStore(
+    useShallow((s) => ({
+      hoveredStructure: s.hoveredStructure,
+      selectedStructure: s.selectedStructure,
+      highlightedStructures: s.highlightedStructures,
+    }))
+  );
 
-  const { outlineTargets, outlineColor } = useMemo(() => {
+  const { outlineTargets, edgeColor, hiddenColor } = useMemo(() => {
     const names: string[] = [...highlightedStructures];
     let color = "#ffffff";
 
@@ -33,26 +39,22 @@ export function Effects() {
       const mesh = meshRegistry.get(name);
       if (mesh) meshes.push(mesh);
     }
-    return { outlineTargets: meshes, outlineColor: color };
+
+    const c = new THREE.Color(color);
+    return {
+      outlineTargets: meshes,
+      edgeColor: c.getHex(),
+      hiddenColor: c.clone().multiplyScalar(0.4).getHex(),
+    };
   }, [hoveredStructure, selectedStructure, highlightedStructures]);
 
-  const edgeColor = useMemo(
-    () => new THREE.Color(outlineColor).getHex(),
-    [outlineColor]
-  );
-  const hiddenColor = useMemo(
-    () =>
-      new THREE.Color(outlineColor).multiplyScalar(0.4).getHex(),
-    [outlineColor]
-  );
-
   return (
-    <EffectComposer multisampling={4} enableNormalPass>
+    <EffectComposer multisampling={0} enableNormalPass>
       <SSAO
         blendFunction={BlendFunction.MULTIPLY}
-        samples={21}
-        radius={0.05}
-        intensity={15}
+        samples={8}
+        radius={0.06}
+        intensity={6}
       />
       <Outline
         selection={outlineTargets}
