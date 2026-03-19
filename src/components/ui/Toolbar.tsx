@@ -3,55 +3,66 @@ import { useAppStore } from "../../store/useAppStore";
 import { ProcedureSelector } from "./ProcedurePanel";
 
 const CAMERA_PRESETS = [
-  { id: "anterior", label: "A", title: "Anterior" },
-  { id: "posterior", label: "P", title: "Posterior" },
-  { id: "left", label: "L", title: "Left Lateral" },
-  { id: "right", label: "R", title: "Right Lateral" },
-  { id: "superior", label: "S", title: "Superior" },
-  { id: "inferior", label: "I", title: "Inferior" },
+  { id: "anterior", label: "Front", icon: "↑" },
+  { id: "posterior", label: "Back", icon: "↓" },
+  { id: "left", label: "Left", icon: "←" },
+  { id: "right", label: "Right", icon: "→" },
+  { id: "superior", label: "Top", icon: "◉" },
+  { id: "inferior", label: "Bottom", icon: "◎" },
 ];
 
-const CLIP_ORIENTATIONS: {
-  id: "sagittal" | "coronal" | "axial";
-  label: string;
-}[] = [
-  { id: "sagittal", label: "Sag" },
-  { id: "coronal", label: "Cor" },
-  { id: "axial", label: "Axl" },
+const CLIP_ORIENTATIONS: { id: "sagittal" | "coronal" | "axial"; label: string }[] = [
+  { id: "sagittal", label: "L/R" },
+  { id: "coronal", label: "A/P" },
+  { id: "axial", label: "S/I" },
 ];
 
-function ToolbarButton({
+function ToolButton({
   active,
   accent,
   onClick,
-  children,
+  icon,
+  label,
   title,
+  badge,
 }: {
   active?: boolean;
   accent?: string;
   onClick: () => void;
-  children: React.ReactNode;
+  icon: React.ReactNode;
+  label: string;
   title?: string;
+  badge?: string;
 }) {
   const color = accent ?? "#4a9eff";
   return (
     <button
       onClick={onClick}
-      title={title}
-      className="px-3 h-8 rounded-lg text-[11px] font-semibold tracking-wide transition-all"
+      title={title ?? label}
+      className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all relative"
       style={{
-        background: active ? `${color}18` : "transparent",
-        color: active ? color : "var(--text-secondary)",
-        border: active ? `1px solid ${color}30` : "1px solid transparent",
+        background: active ? `${color}15` : "transparent",
+        border: active ? `1px solid ${color}25` : "1px solid transparent",
       }}
     >
-      {children}
+      <span className="text-base leading-none" style={{ color: active ? color : "var(--text-secondary)" }}>
+        {icon}
+      </span>
+      <span className="text-[9px] font-medium" style={{ color: active ? color : "var(--text-tertiary)" }}>
+        {label}
+      </span>
+      {badge && (
+        <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
+          style={{ background: accent ?? "var(--accent)" }}>
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
 
 function Divider() {
-  return <div className="w-px h-5 mx-0.5" style={{ background: "var(--border)" }} />;
+  return <div className="w-px h-8 mx-1" style={{ background: "var(--border)" }} />;
 }
 
 export function Toolbar() {
@@ -65,49 +76,84 @@ export function Toolbar() {
   const clippingPosition = useAppStore((s) => s.clippingPosition);
   const setClippingPosition = useAppStore((s) => s.setClippingPosition);
   const quizMode = useAppStore((s) => s.quizMode);
+  const activeProcedure = useAppStore((s) => s.activeProcedure);
+  const [showCameras, setShowCameras] = useState(false);
 
   return (
     <div
-      className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-1.5 rounded-2xl max-md:bottom-3 max-md:px-1.5 max-md:gap-0 max-md:max-w-[calc(100%-1rem)] max-md:overflow-x-auto"
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-2 py-1 rounded-2xl max-md:bottom-2 max-md:max-w-[calc(100%-1rem)] max-md:overflow-x-auto"
       style={{
-        background: "rgba(10,10,18,0.85)",
-        border: "1px solid rgba(30,30,50,0.6)",
+        background: "rgba(10,10,18,0.88)",
+        border: "1px solid rgba(30,30,50,0.5)",
         backdropFilter: "blur(20px)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
     >
-      {/* Camera presets */}
-      <div className="flex items-center gap-0.5 px-1">
-        {CAMERA_PRESETS.map((preset) => (
-          <button
-            key={preset.id}
-            onClick={() => setCameraPreset(preset.id)}
-            title={preset.title}
-            className="w-7 h-7 rounded-md text-[11px] font-bold transition-all hover:bg-[rgba(255,255,255,0.08)] active:scale-90"
-            style={{ color: "var(--text-secondary)" }}
+      {/* Camera views */}
+      <div className="relative">
+        <ToolButton
+          onClick={() => setShowCameras(!showCameras)}
+          icon={
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          }
+          label="Views"
+          active={showCameras}
+        />
+        {showCameras && (
+          <div
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 rounded-xl grid grid-cols-3 gap-1 min-w-[180px]"
+            style={{ background: "rgba(10,10,18,0.95)", border: "1px solid rgba(30,30,50,0.6)", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
           >
-            {preset.label}
-          </button>
-        ))}
+            {CAMERA_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => { setCameraPreset(p.id); setShowCameras(false); }}
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors hover:bg-[rgba(255,255,255,0.06)]"
+              >
+                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>{p.icon}</span>
+                <span className="text-[10px] font-medium" style={{ color: "var(--text-secondary)" }}>{p.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <Divider />
 
-      {/* Modes */}
-      <div className="flex items-center gap-0.5 px-0.5">
-        <ToolbarButton active={xRayMode} onClick={toggleXRayMode} title="X-Ray Mode">
-          X-Ray
-        </ToolbarButton>
-        <ToolbarButton active={clippingEnabled} onClick={toggleClipping} title="Cross-Section">
-          Clip
-        </ToolbarButton>
-      </div>
+      {/* Visualization modes */}
+      <ToolButton
+        active={xRayMode}
+        accent="#60a5fa"
+        onClick={toggleXRayMode}
+        icon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        }
+        label="X-Ray"
+        title="See through all layers to the selected structure"
+      />
+
+      <ToolButton
+        active={clippingEnabled}
+        accent="#60a5fa"
+        onClick={toggleClipping}
+        icon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        }
+        label="Cut"
+        title="Cross-section: slice through the model"
+      />
 
       {/* Clipping controls */}
       {clippingEnabled && (
         <>
-          <Divider />
-          <div className="flex items-center gap-0.5 px-0.5">
+          <div className="flex items-center gap-0.5 pl-1">
             {CLIP_ORIENTATIONS.map((o) => (
               <button
                 key={o.id}
@@ -122,15 +168,11 @@ export function Toolbar() {
               </button>
             ))}
             <input
-              type="range"
-              min={-2}
-              max={2}
-              step={0.01}
+              type="range" min={-2} max={2} step={0.01}
               value={clippingPosition}
               onChange={(e) => setClippingPosition(parseFloat(e.target.value))}
               className="w-16 mx-1"
               style={{ background: `linear-gradient(to right, var(--accent)30 0%, var(--accent) 50%, var(--bg-tertiary) 50%)` }}
-              title={`Position: ${clippingPosition.toFixed(2)}`}
             />
           </div>
         </>
@@ -138,29 +180,32 @@ export function Toolbar() {
 
       <Divider />
 
-      {/* Study tools */}
-      <div className="flex items-center gap-0.5 px-0.5">
-        <ToolbarButton
-          active={quizMode !== "off"}
-          accent="#22c55e"
-          onClick={() => useAppStore.getState().setQuizMode(quizMode === "off" ? "identify" : "off")}
-          title="Quiz Mode"
-        >
-          Quiz
-        </ToolbarButton>
-        <ProcedureButton />
-      </div>
+      {/* Learning tools — these are the star features */}
+      <ToolButton
+        active={quizMode !== "off"}
+        accent="#22c55e"
+        onClick={() => useAppStore.getState().setQuizMode(quizMode === "off" ? "identify" : "off")}
+        icon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M12 18.75h.008v.008H12v-.008z" />
+          </svg>
+        }
+        label="Quiz"
+        title="Test your anatomy knowledge"
+      />
 
-      <Divider />
+      <ProcedureButton />
 
-      <button
-        onClick={() => setCameraPreset("anterior")}
-        title="Reset View"
-        className="px-2.5 h-7 rounded-md text-[10px] font-medium transition-all hover:bg-[rgba(255,255,255,0.06)]"
-        style={{ color: "var(--text-tertiary)" }}
-      >
-        Reset
-      </button>
+      <ToolButton
+        onClick={() => useAppStore.getState().setCommandPaletteOpen(true)}
+        icon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+        }
+        label="Search"
+        title="Search structures, procedures, actions (Cmd+K)"
+      />
     </div>
   );
 }
@@ -171,14 +216,19 @@ function ProcedureButton() {
 
   return (
     <>
-      <ToolbarButton
+      <ToolButton
         active={!!activeProcedure}
         accent="#a78bfa"
         onClick={() => setShowSelector(!showSelector)}
-        title="Surgical Procedures"
-      >
-        Procedures
-      </ToolbarButton>
+        icon={
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.384-3.19A1.001 1.001 0 015 11.14V5.5a1 1 0 011.5-.866l5.384 3.19a1 1 0 010 1.732l-5.384 3.19a1 1 0 01-1.5-.866z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0 4.142-3.358 7.5-7.5 7.5S4.5 16.142 4.5 12 7.858 4.5 12 4.5s7.5 3.358 7.5 7.5z" />
+          </svg>
+        }
+        label="Surgical"
+        title="Step-by-step surgical procedure walkthroughs"
+      />
       {showSelector && <ProcedureSelector onClose={() => setShowSelector(false)} />}
     </>
   );

@@ -37,7 +37,7 @@ export function LayerPanel({ embedded }: { embedded?: boolean }) {
       {!embedded && (
         <div className="px-4 pt-5 pb-3 flex items-center justify-between">
           <span className="text-[10px] font-semibold tracking-[0.12em] uppercase" style={{ color: "var(--text-secondary)" }}>
-            Systems
+            Layers
           </span>
           <button
             onClick={showAllSystems}
