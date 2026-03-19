@@ -93,15 +93,15 @@ const allSystemsVisible = (): Record<AnatomicalSystem, boolean> => ({
 });
 
 const defaultOpacity = (): Record<AnatomicalSystem, number> => ({
-  skeletal: 1,
+  skeletal: 0.6,    // semi-transparent so organs are visible through bones
   muscular: 1,
   arterial: 1,
   venous: 1,
   nervous: 1,
   lymphatic: 1,
   organs: 1,
-  fascia: 1,
-  spaces: 1,
+  fascia: 0.8,
+  spaces: 0.3,
 });
 
 export const useAppStore = create<AppState>((set) => ({

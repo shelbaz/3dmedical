@@ -206,8 +206,8 @@ export function ProcedureSelector({ onClose }: { onClose: () => void }) {
   const setActiveProcedure = useAppStore((s) => s.setActiveProcedure);
 
   return (
-    <div className="absolute top-4 right-4 z-20 w-[320px] rounded-xl overflow-hidden shadow-2xl"
-      style={{ background: "rgba(18,18,26,0.95)", border: "1px solid rgba(42,42,62,0.8)", backdropFilter: "blur(12px)" }}
+    <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[360px] rounded-xl overflow-hidden shadow-2xl"
+      style={{ background: "rgba(14,14,22,0.96)", border: "1px solid rgba(40,40,60,0.6)", backdropFilter: "blur(20px)", boxShadow: "0 12px 48px rgba(0,0,0,0.6)" }}
     >
       <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
         <h3 className="text-sm font-semibold">Surgical Procedures</h3>

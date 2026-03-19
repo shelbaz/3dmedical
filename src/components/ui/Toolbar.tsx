@@ -103,8 +103,8 @@ export function Toolbar() {
         />
         {showCameras && (
           <div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 rounded-xl grid grid-cols-3 gap-1 min-w-[180px]"
-            style={{ background: "rgba(10,10,18,0.95)", border: "1px solid rgba(30,30,50,0.6)", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}
+            className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 p-2 rounded-xl grid grid-cols-3 gap-1 min-w-[180px]"
+            style={{ background: "rgba(14,14,22,0.96)", border: "1px solid rgba(40,40,60,0.6)", boxShadow: "0 12px 48px rgba(0,0,0,0.6)", backdropFilter: "blur(20px)" }}
           >
             {CAMERA_PRESETS.map((p) => (
               <button
