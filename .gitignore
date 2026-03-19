@@ -33,3 +33,4 @@ drizzle/meta/
 public/models/*.glb
 public/models/*.gltf
 !public/models/.gitkeep
+.playwright-mcp/

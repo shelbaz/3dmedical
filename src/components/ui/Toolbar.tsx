@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useAppStore } from "../../store/useAppStore";
+import { ProcedureSelector } from "./ProcedurePanel";
 
 const CAMERA_PRESETS = [
   { id: "anterior", label: "A", title: "Anterior" },
@@ -28,6 +30,7 @@ export function Toolbar() {
   const setClippingOrientation = useAppStore((s) => s.setClippingOrientation);
   const clippingPosition = useAppStore((s) => s.clippingPosition);
   const setClippingPosition = useAppStore((s) => s.setClippingPosition);
+  const quizMode = useAppStore((s) => s.quizMode);
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-2 rounded-xl"
@@ -118,6 +121,21 @@ export function Toolbar() {
 
       <div className="w-px h-6 mx-1" style={{ background: "var(--border)" }} />
 
+      {/* Quiz */}
+      <button
+        onClick={() => useAppStore.getState().setQuizMode("identify")}
+        title="Quiz Mode"
+        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.1)]"
+        style={{ color: quizMode !== "off" ? "#22c55e" : "var(--text-secondary)" }}
+      >
+        Quiz
+      </button>
+
+      {/* Procedures */}
+      <ProcedureButton />
+
+      <div className="w-px h-6 mx-1" style={{ background: "var(--border)" }} />
+
       {/* Reset view */}
       <button
         onClick={() => setCameraPreset("anterior")}
@@ -128,5 +146,24 @@ export function Toolbar() {
         Reset
       </button>
     </div>
+  );
+}
+
+function ProcedureButton() {
+  const [showSelector, setShowSelector] = useState(false);
+  const activeProcedure = useAppStore((s) => s.activeProcedure);
+
+  return (
+    <>
+      <button
+        onClick={() => setShowSelector(!showSelector)}
+        title="Surgical Procedures"
+        className="px-2.5 h-8 rounded-lg text-xs font-medium transition-colors hover:bg-[rgba(255,255,255,0.1)]"
+        style={{ color: activeProcedure ? "#60a5fa" : "var(--text-secondary)" }}
+      >
+        Procedures
+      </button>
+      {showSelector && <ProcedureSelector onClose={() => setShowSelector(false)} />}
+    </>
   );
 }

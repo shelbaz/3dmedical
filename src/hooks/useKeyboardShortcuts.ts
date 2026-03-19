@@ -20,6 +20,14 @@ export function useKeyboardShortcuts() {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
+      // Cmd+K or Ctrl+K for command palette
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const state = useAppStore.getState();
+        state.setCommandPaletteOpen(!state.commandPaletteOpen);
+        return;
+      }
+
       if (e.key === "/") {
         e.preventDefault();
         useAppStore.getState().setSearchOpen(true);
@@ -28,13 +36,22 @@ export function useKeyboardShortcuts() {
 
       if (e.key === "Escape") {
         const state = useAppStore.getState();
-        if (state.searchOpen) {
+        if (state.commandPaletteOpen) {
+          state.setCommandPaletteOpen(false);
+        } else if (state.searchOpen) {
           state.setSearchOpen(false);
+        } else if (state.quizMode !== "off") {
+          state.setQuizMode("off");
+          state.setHighlightedStructures([]);
+        } else if (state.activeProcedure) {
+          state.setActiveProcedure(null);
+          state.setHighlightedStructures([]);
+          state.setWarningStructures([]);
         } else if (state.selectedStructure) {
           state.setSelectedStructure(null);
           state.setDetailPanelOpen(false);
         }
-        state.setHighlightedStructures([]);
+        state.setHighlightColors({});
         return;
       }
 

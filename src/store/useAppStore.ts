@@ -49,6 +49,31 @@ interface AppState {
   // Highlighting
   highlightedStructures: string[];
   setHighlightedStructures: (names: string[]) => void;
+  warningStructures: string[];
+  setWarningStructures: (names: string[]) => void;
+  highlightColors: Record<string, string>;
+  setHighlightColors: (colors: Record<string, string>) => void;
+
+  // Quiz
+  quizMode: "off" | "identify" | "locate";
+  setQuizMode: (mode: "off" | "identify" | "locate") => void;
+  quizTarget: string | null;
+  setQuizTarget: (name: string | null) => void;
+  quizScore: { correct: number; total: number; streak: number };
+  updateQuizScore: (correct: boolean) => void;
+  resetQuizScore: () => void;
+  quizSystem: AnatomicalSystem | "all";
+  setQuizSystem: (system: AnatomicalSystem | "all") => void;
+
+  // Procedure
+  activeProcedure: string | null;
+  setActiveProcedure: (id: string | null) => void;
+  procedureStep: number;
+  setProcedureStep: (step: number) => void;
+
+  // Command palette
+  commandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
 }
 
 const allSystemsVisible = (): Record<AnatomicalSystem, boolean> => ({
@@ -142,4 +167,48 @@ export const useAppStore = create<AppState>((set) => ({
 
   highlightedStructures: [],
   setHighlightedStructures: (names) => set({ highlightedStructures: names }),
+  warningStructures: [],
+  setWarningStructures: (names) => set({ warningStructures: names }),
+  highlightColors: {},
+  setHighlightColors: (colors) => set({ highlightColors: colors }),
+
+  quizMode: "off",
+  setQuizMode: (mode) =>
+    set({
+      quizMode: mode,
+      quizTarget: null,
+      selectedStructure: null,
+      detailPanelOpen: false,
+      highlightedStructures: [],
+      warningStructures: [],
+    }),
+  quizTarget: null,
+  setQuizTarget: (name) => set({ quizTarget: name }),
+  quizScore: { correct: 0, total: 0, streak: 0 },
+  updateQuizScore: (correct) =>
+    set((s) => ({
+      quizScore: {
+        correct: s.quizScore.correct + (correct ? 1 : 0),
+        total: s.quizScore.total + 1,
+        streak: correct ? s.quizScore.streak + 1 : 0,
+      },
+    })),
+  resetQuizScore: () => set({ quizScore: { correct: 0, total: 0, streak: 0 } }),
+  quizSystem: "all",
+  setQuizSystem: (system) => set({ quizSystem: system }),
+
+  activeProcedure: null,
+  setActiveProcedure: (id) =>
+    set({
+      activeProcedure: id,
+      procedureStep: 0,
+      selectedStructure: null,
+      detailPanelOpen: false,
+    }),
+  procedureStep: 0,
+  setProcedureStep: (step) => set({ procedureStep: step }),
+
+  commandPaletteOpen: false,
+  setCommandPaletteOpen: (open) =>
+    set({ commandPaletteOpen: open, searchOpen: false }),
 }));

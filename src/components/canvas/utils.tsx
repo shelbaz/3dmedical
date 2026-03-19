@@ -128,6 +128,10 @@ export function Structure({
   const setSelected = useAppStore((s) => s.setSelectedStructure);
   const xRayMode = useAppStore((s) => s.xRayMode);
   const clippingPlanes = useContext(ClippingPlanesContext);
+  const isWarning = useAppStore((s) => s.warningStructures.includes(name));
+  const highlightColor = useAppStore((s) => s.highlightColors[name]);
+  const quizMode = useAppStore((s) => s.quizMode);
+  const quizTarget = useAppStore((s) => s.quizTarget);
 
   const { targetVisible, systemOpacity } = useContext(SystemOpacityContext);
   const meshRef = useRef<THREE.Mesh>(null!);
@@ -152,8 +156,8 @@ export function Structure({
     targetDepthWrite = targetOpacity >= 0.99;
   }
 
-  // Smooth opacity animation via useFrame
-  useFrame((_, delta) => {
+  // Smooth opacity animation + warning pulse via useFrame
+  useFrame(({ clock }, delta) => {
     if (!meshRef.current) return;
     const mat = meshRef.current.material as THREE.MeshStandardMaterial;
     const diff = targetOpacity - currentOpacity.current;
@@ -167,14 +171,38 @@ export function Structure({
     mat.transparent = op < 0.99;
     mat.depthWrite = xRayMode ? targetDepthWrite : op >= 0.99;
     mat.side = op < 0.99 ? THREE.DoubleSide : THREE.FrontSide;
+
+    // Warning pulse (red glow for at-risk structures)
+    if (isWarning) {
+      const pulse = Math.sin(clock.elapsedTime * 3) * 0.2 + 0.35;
+      mat.emissive = new THREE.Color("#ef4444");
+      mat.emissiveIntensity = pulse;
+    }
+
     mat.needsUpdate = true;
     meshRef.current.visible = op > 0.003;
   });
 
-  // Material color
-  const materialColor = isHovered && !xRayMode ? "#ffffff" : color;
-  const emissive = isHovered ? color : "#000000";
-  const emissiveIntensity = isHovered ? 0.35 : isSelected ? 0.15 : 0;
+  // Material color — warning overrides, then highlight color, then normal
+  const materialColor = isWarning
+    ? "#ef4444"
+    : highlightColor
+    ? highlightColor
+    : isHovered && !xRayMode
+    ? "#ffffff"
+    : color;
+  const emissive = isWarning
+    ? "#ef4444"
+    : highlightColor ?? (isHovered ? color : "#000000");
+  const emissiveIntensity = isWarning
+    ? 0.35
+    : highlightColor
+    ? 0.3
+    : isHovered
+    ? 0.35
+    : isSelected
+    ? 0.15
+    : 0;
 
   // Common material props
   const baseMaterialProps = {
@@ -242,13 +270,15 @@ export function Structure({
         }}
         onClick={(e) => {
           e.stopPropagation();
+          // In quiz locate mode, clicking always goes through setSelected
+          // The QuizPanel listens for selectedStructure changes
           setSelected({ id: name, name, system, description, clinicalSignificance });
         }}
       >
         {children}
         {renderMaterial()}
       </mesh>
-      {isHovered && (
+      {isHovered && !(quizMode === "identify" && quizTarget === name) && (
         <Html center distanceFactor={8} style={{ pointerEvents: "none" }}>
           <div
             style={{

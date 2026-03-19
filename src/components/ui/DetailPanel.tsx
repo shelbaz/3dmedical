@@ -1,6 +1,8 @@
 import { useAppStore } from "../../store/useAppStore";
 import { SYSTEM_COLORS, SYSTEM_LABELS } from "../../types/anatomy";
 import { trpc } from "../../lib/trpc";
+import { resolveRelatedStructures } from "../../lib/resolveRelatedStructures";
+import type { AnatomicalSystem } from "../../types/anatomy";
 
 const DIRECTION_ORDER = [
   "anterior",
@@ -78,6 +80,9 @@ export function DetailPanel() {
   const highlightedStructures = useAppStore((s) => s.highlightedStructures);
   const setHighlightedStructures = useAppStore(
     (s) => s.setHighlightedStructures
+  );
+  const setHighlightColors = useAppStore((s) => s.setHighlightColors);
+  const highlightColors = useAppStore((s) => s.highlightColors
   );
 
   const { data: details, isLoading } = trpc.getStructureDetails.useQuery(
@@ -401,6 +406,52 @@ export function DetailPanel() {
               />
             </div>
           )}
+        </div>
+      )}
+
+      {/* Show Related Structures button */}
+      {(hasArterial || hasVenous || hasInnervation || hasLymphatic) && (
+        <div className="px-5 py-3">
+          <button
+            onClick={() => {
+              const isActive = Object.keys(highlightColors).length > 0;
+              if (isActive) {
+                setHighlightedStructures([]);
+                setHighlightColors({});
+              } else {
+                const resolved = resolveRelatedStructures({
+                  arterialSupply: details?.arterialSupply,
+                  venousDrainage: details?.venousDrainage,
+                  innervation: details?.innervation,
+                  lymphaticDrainage: details?.lymphaticDrainage,
+                });
+                setHighlightedStructures(resolved.names);
+                setHighlightColors(resolved.colors);
+                // Ensure systems are visible
+                const toggleSystem = useAppStore.getState().toggleSystem;
+                const visible = useAppStore.getState().visibleSystems;
+                for (const sys of resolved.systems) {
+                  if (!visible[sys as AnatomicalSystem]) toggleSystem(sys as AnatomicalSystem);
+                }
+              }
+            }}
+            className="w-full px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-all"
+            style={{
+              background: Object.keys(highlightColors).length > 0
+                ? "rgba(99,102,241,0.15)"
+                : "rgba(99,102,241,0.08)",
+              color: "#818cf8",
+              border: `1px solid ${
+                Object.keys(highlightColors).length > 0
+                  ? "rgba(99,102,241,0.35)"
+                  : "rgba(99,102,241,0.15)"
+              }`,
+            }}
+          >
+            {Object.keys(highlightColors).length > 0
+              ? "Clear Related Highlights"
+              : "Show Related Structures"}
+          </button>
         </div>
       )}
 
