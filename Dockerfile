@@ -1,8 +1,8 @@
-# Stage 1: Build
+# Stage 1: Build (force all deps regardless of NODE_ENV)
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN NODE_ENV=development npm ci
 COPY . .
 RUN npm run build
 
