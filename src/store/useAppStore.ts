@@ -93,7 +93,7 @@ const allSystemsVisible = (): Record<AnatomicalSystem, boolean> => ({
 });
 
 const defaultOpacity = (): Record<AnatomicalSystem, number> => ({
-  skeletal: 0.6,    // semi-transparent so organs are visible through bones
+  skeletal: 0.85,   // slightly transparent to hint at organs behind
   muscular: 1,
   arterial: 1,
   venous: 1,

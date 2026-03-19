@@ -242,8 +242,8 @@ function GLTFMesh({
     meshRef.current.visible = op > 0.003;
   });
 
-  // Don't raycast invisible structures, OR semi-transparent bones (let clicks pass through to organs)
-  const isRaycastable = targetOpacity > 0.01 && !(system === "skeletal" && targetOpacity < 0.75);
+  // Don't raycast invisible structures
+  const isRaycastable = targetOpacity > 0.01;
 
   return (
     <>

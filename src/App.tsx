@@ -157,6 +157,7 @@ function Viewer() {
         <Scene />
         <SearchBar />
         <Toolbar />
+        <HoverLabel />
         <CommandPalette />
         {contextMenu && (
           <ContextMenu
