@@ -399,7 +399,7 @@ export function GLTFMuscleModel() {
     return result;
   }, [scene]);
 
-  // Same transform as the main model (same coordinate system)
+  // Same MRI series as main model — use identical transform to align
   const scale = 0.008;
 
   return (
