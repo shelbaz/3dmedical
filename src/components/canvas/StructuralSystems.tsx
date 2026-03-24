@@ -228,142 +228,18 @@ export function SkeletalSystem() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MUSCULAR SYSTEM — comprehensive pelvic muscles
-// MRI model has some muscles but they're not individually segmented.
-// Procedural geometry provides individually clickable, named muscles.
+// MUSCULAR SYSTEM — supplementary perineal structures only
+// Major muscles (Levator Ani, Piriformis, Obturator Internus,
+// Iliopsoas) now come from the MRI GLTF model (pelvic-organs-mri.glb).
 // ═══════════════════════════════════════════════════════════════
 
 export function MuscularSystem() {
-  // Levator Ani — funnel/hammock shape with central hiatus (high-res)
-  const levatorAniGeo = useMemo(() => {
-    const profile = [
-      new THREE.Vector2(0.12, 0.02),
-      new THREE.Vector2(0.16, -0.01),
-      new THREE.Vector2(0.22, -0.04),
-      new THREE.Vector2(0.30, -0.07),
-      new THREE.Vector2(0.40, -0.10),
-      new THREE.Vector2(0.52, -0.12),
-      new THREE.Vector2(0.65, -0.13),
-      new THREE.Vector2(0.78, -0.11),
-      new THREE.Vector2(0.88, -0.06),
-      new THREE.Vector2(0.95, 0.00),
-      new THREE.Vector2(1.00, 0.05),
-    ];
-    return new THREE.LatheGeometry(profile, 48);
-  }, []);
-
-  // Coccygeus — fan-shaped from ischial spine to sacrum/coccyx
-  const coccygeusGeo = useMemo(
-    () =>
-      makeExtruded(
-        (s) => {
-          s.moveTo(0, 0);
-          s.bezierCurveTo(0.1, 0.1, 0.3, 0.15, 0.5, 0.12);
-          s.bezierCurveTo(0.55, 0.08, 0.55, -0.08, 0.5, -0.12);
-          s.bezierCurveTo(0.3, -0.15, 0.1, -0.1, 0, 0);
-        },
-        0.05,
-        true
-      ),
-    []
-  );
-
-  // Piriformis — broad triangular muscle on posterior wall
-  const piriformisGeo = useMemo(
-    () =>
-      makeExtruded(
-        (s) => {
-          s.moveTo(-0.15, 0);
-          s.bezierCurveTo(-0.05, 0.12, 0.25, 0.18, 0.55, 0.12);
-          s.bezierCurveTo(0.7, 0.08, 0.75, 0, 0.7, -0.06);
-          s.bezierCurveTo(0.55, -0.14, 0.25, -0.18, -0.05, -0.12);
-          s.bezierCurveTo(-0.12, -0.08, -0.15, -0.04, -0.15, 0);
-        },
-        0.06,
-        true
-      ),
-    []
-  );
-
-  // Obturator internus — broad curved plate on lateral pelvic wall
-  const obtIntGeo = useMemo(
-    () =>
-      makeExtruded(
-        (s) => {
-          s.moveTo(0, 0);
-          s.bezierCurveTo(0.02, 0.2, 0.04, 0.45, 0.02, 0.6);
-          s.bezierCurveTo(0.08, 0.65, 0.28, 0.68, 0.38, 0.62);
-          s.bezierCurveTo(0.42, 0.5, 0.42, 0.15, 0.38, 0);
-          s.bezierCurveTo(0.25, -0.04, 0.1, -0.03, 0, 0);
-        },
-        0.05,
-        true
-      ),
-    []
-  );
-
-  // Iliacus — broad flat muscle lining the iliac fossa
-  const iliacusGeo = useMemo(
-    () =>
-      makeExtruded(
-        (s) => {
-          s.moveTo(0, 0);
-          s.bezierCurveTo(0.1, 0.3, 0.2, 0.7, 0.15, 1.0);
-          s.bezierCurveTo(0.05, 1.1, -0.15, 1.05, -0.25, 0.9);
-          s.bezierCurveTo(-0.4, 0.6, -0.35, 0.2, -0.15, 0.05);
-          s.lineTo(0, 0);
-        },
-        0.04,
-        true
-      ),
-    []
-  );
-
-  // Psoas major — long cylindrical muscle descending from lumbar spine
-  const psoasGeo = useMemo(
-    () =>
-      makeTube(
-        [
-          [0, 1.2, -0.2],
-          [-0.05, 0.9, -0.1],
-          [-0.1, 0.6, 0.0],
-          [-0.15, 0.3, 0.15],
-          [-0.2, 0.0, 0.3],
-          [-0.3, -0.3, 0.5],
-        ],
-        0.08
-      ),
-    []
-  );
-
   const muscle = "#c44040";
   const deepMuscle = "#a83535";
 
   return (
     <SystemGroup system="muscular">
-      {/* Pelvic floor */}
-      <Structure name="Levator Ani" system="muscular" geometry={levatorAniGeo} position={[0, -0.6, 0.05]} color={muscle} roughness={0.5} opacity={0.85} description="The primary muscle of the pelvic floor forming a funnel-shaped diaphragm. Composed of pubococcygeus (pubovaginalis, puboperinealis, puboanalis), puborectalis, and iliococcygeus. The central hiatus transmits the urethra, vagina, and rectum." clinicalSignificance="The levator hiatus is the primary site of weakness in pelvic organ prolapse. Avulsion from the pubic bone occurs in ~36% of vaginal deliveries. The iliococcygeus forms the levator plate — the horizontal shelf supporting pelvic organs." />
-
-      <Structure name="Coccygeus (L)" system="muscular" geometry={coccygeusGeo} position={[-0.55, -0.35, -0.6]} rotation={[0.1, 0.6, 0.15]} color={deepMuscle} roughness={0.5} description="Fan-shaped muscle from ischial spine to lateral sacrum/coccyx (S4-S5). Posterior to levator ani. Often partially tendinous, blending with the sacrospinous ligament." />
-      <Structure name="Coccygeus (R)" system="muscular" geometry={coccygeusGeo} position={[0.55, -0.35, -0.6]} rotation={[0.1, -0.6, -0.15]} scale={[-1, 1, 1]} color={deepMuscle} roughness={0.5} description="Right coccygeus." />
-
-      {/* Posterior wall */}
-      <Structure name="Piriformis" system="muscular" geometry={piriformisGeo} position={[-0.15, 0.35, -0.85]} rotation={[0.5, 0, 0]} color={deepMuscle} roughness={0.5} description="Origin: anterior sacrum (S2-S4). Exits through greater sciatic foramen. Divides the foramen into suprapiriform and infrapiriform spaces." clinicalSignificance="Sciatic nerve exits BELOW piriformis (~88%). Superior gluteal nerve/vessels pass ABOVE it. Pudendal nerve exits below it. Piriformis syndrome: sciatic nerve compression variant." />
-
-      {/* Lateral wall */}
-      <Structure name="Obturator Internus (L)" system="muscular" geometry={obtIntGeo} position={[-0.95, -0.55, 0.35]} rotation={[0, 0.3, 0]} color="#b83838" roughness={0.5} description="Pelvic wall muscle lining the obturator foramen. Its fascia gives rise to the ATLA, ATFP (white line), and forms Alcock's canal (pudendal canal)." clinicalSignificance="The ATFP (white line) is the lateral attachment of the pubocervical fascia — detachment causes paravaginal defect (lateral cystocele). Alcock's canal on its medial surface contains the pudendal neurovascular bundle." />
-      <Structure name="Obturator Internus (R)" system="muscular" geometry={obtIntGeo} position={[0.95, -0.55, 0.35]} rotation={[0, -0.3, 0]} scale={[-1, 1, 1]} color="#b83838" roughness={0.5} description="Right obturator internus." />
-
-      {/* Iliac fossa muscles */}
-      <Structure name="Iliacus (L)" system="muscular" geometry={iliacusGeo} position={[-0.8, 0.35, 0.0]} rotation={[0.15, 0.5, 0.1]} color="#c04848" roughness={0.5} opacity={0.8} description="Broad flat muscle lining the iliac fossa. Joins the psoas major to form the iliopsoas — the primary hip flexor. Innervated by the femoral nerve (L2-L4)." clinicalSignificance="The iliopsoas is a key anatomical landmark during pelvic surgery. Psoas abscess or hematoma tracks along its sheath." />
-      <Structure name="Iliacus (R)" system="muscular" geometry={iliacusGeo} position={[0.8, 0.35, 0.0]} rotation={[0.15, -0.5, -0.1]} scale={[-1, 1, 1]} color="#c04848" roughness={0.5} opacity={0.8} description="Right iliacus." />
-
-      {/* Psoas major */}
-      <Structure name="Psoas Major (L)" system="muscular" geometry={psoasGeo} position={[-0.25, 0, 0]} color="#b04040" roughness={0.5} description="Long fusiform muscle from T12-L5 vertebral bodies/transverse processes. Joins iliacus to form iliopsoas. Primary hip flexor." clinicalSignificance="The lumbar plexus (L1-L4) forms within the psoas muscle. Psoas sign: pain on hip extension indicates retrocecal appendicitis or psoas abscess." />
-      <Structure name="Psoas Major (R)" system="muscular" geometry={psoasGeo} position={[0.25, 0, 0]} scale={[-1, 1, 1]} color="#b04040" roughness={0.5} description="Right psoas major." />
-
-      {/* Perineal structures */}
-      <Structure name="External Anal Sphincter" system="muscular" position={[0, -1.0, -0.45]} rotation={[Math.PI / 2, 0, 0]} color={deepMuscle} roughness={0.5} description="Voluntary skeletal muscle surrounding the anal canal. Three parts: subcutaneous, superficial (perineal body to anococcygeal ligament), and deep (blends with puborectalis)." clinicalSignificance="Third/fourth degree perineal tears involve this sphincter. The intersphincteric plane between internal and external sphincters is the surgical plane for intersphincteric resection.">
+      <Structure name="External Anal Sphincter" system="muscular" position={[0, -1.0, -0.45]} rotation={[Math.PI / 2, 0, 0]} color={deepMuscle} roughness={0.5} description="Voluntary skeletal muscle surrounding the anal canal. Three parts: subcutaneous, superficial (perineal body to anococcygeal ligament), and deep (blends with puborectalis)." clinicalSignificance="Third/fourth degree perineal tears involve this sphincter.">
         <torusGeometry args={[0.1, 0.035, 16, 32]} />
       </Structure>
 
@@ -371,7 +247,7 @@ export function MuscularSystem() {
         <torusGeometry args={[0.06, 0.025, 16, 32]} />
       </Structure>
 
-      <Structure name="Perineal Body" system="muscular" position={[0, -1.05, 0.05]} color="#d45050" roughness={0.55} description="Fibromuscular node (central tendon of perineum) between vagina and anus. Convergence of: bulbospongiosus, transverse perineal muscles, external anal sphincter, levator ani (puboperinealis), rectovaginal fascia." clinicalSignificance="CRITICAL keystone of pelvic floor support. Disruption during obstetric injury causes widened genital hiatus and prolapse. Site of episiotomy. Perineorrhaphy is key to posterior prolapse repair.">
+      <Structure name="Perineal Body" system="muscular" position={[0, -1.05, 0.05]} color="#d45050" roughness={0.55} description="Fibromuscular node (central tendon of perineum) between vagina and anus. Convergence of: bulbospongiosus, transverse perineal muscles, external anal sphincter, levator ani, rectovaginal fascia." clinicalSignificance="CRITICAL keystone of pelvic floor support. Disruption during obstetric injury causes widened genital hiatus and prolapse.">
         <sphereGeometry args={[0.06, 16, 16]} />
       </Structure>
 

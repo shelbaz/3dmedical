@@ -347,4 +347,77 @@ export function GLTFPelvicModel() {
   );
 }
 
+// ─── Second GLTF: Pelvic Organs/Muscles from MRI ──────────────
+
+const MUSCLE_MESH_MAP: Record<number, StructureMapping> = {
+  // #d35c5c meshes — pelvic muscles from MRI segmentation
+  12: { name: "Levator Ani (MRI)", system: "muscular", description: "The primary muscle of the pelvic floor — MRI-segmented. A funnel-shaped diaphragm composed of pubococcygeus, puborectalis, and iliococcygeus.", clinicalSignificance: "The levator hiatus is the primary site of weakness in pelvic organ prolapse. Avulsion from the pubic bone occurs in ~36% of vaginal deliveries." },
+  13: { name: "Pelvic Diaphragm (MRI)", system: "muscular", description: "The muscular floor of the pelvis from MRI — includes levator ani and coccygeus components.", clinicalSignificance: "Supports pelvic organs. Weakening leads to pelvic organ prolapse." },
+  14: { name: "Obturator Internus (MRI)", system: "muscular", description: "Pelvic wall muscle from MRI segmentation. Lines the obturator foramen. Its fascia gives rise to the ATFP and forms Alcock's canal.", clinicalSignificance: "The ATFP ('white line') is the lateral attachment of pubocervical fascia. Alcock's canal contains the pudendal neurovascular bundle." },
+  15: { name: "Piriformis (MRI)", system: "muscular", description: "Posterior pelvic wall muscle from MRI. Origin: anterior sacrum (S2-S4). Exits through greater sciatic foramen.", clinicalSignificance: "Sciatic nerve exits below piriformis. Superior gluteal nerve/vessels pass above. Piriformis syndrome mimics sciatica." },
+  16: { name: "Iliopsoas (MRI)", system: "muscular", description: "Combined iliacus and psoas major from MRI — the primary hip flexor. The lumbar plexus forms within the psoas.", clinicalSignificance: "Key landmark during pelvic surgery. Psoas abscess tracks along its sheath. Femoral nerve runs along its lateral border." },
+};
+
+export function GLTFMuscleModel() {
+  const { scene } = useGLTF("/models/pelvic-organs-mri.glb");
+
+  const structures = useMemo(() => {
+    const result: {
+      mesh: THREE.Mesh;
+      name: string;
+      system: AnatomicalSystem;
+      description?: string;
+      clinicalSignificance?: string;
+      color: THREE.Color;
+    }[] = [];
+
+    let meshIndex = 0;
+    scene.traverse((child) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      if (!mat?.color) return;
+
+      mesh.geometry.computeBoundingBox();
+      mesh.geometry.computeBoundingSphere();
+
+      const mapping = MUSCLE_MESH_MAP[meshIndex];
+      if (mapping) {
+        result.push({
+          mesh,
+          name: mapping.name,
+          system: mapping.system,
+          description: mapping.description,
+          clinicalSignificance: mapping.clinicalSignificance,
+          color: new THREE.Color("#c44040"), // muscle red
+        });
+      }
+
+      meshIndex++;
+    });
+
+    return result;
+  }, [scene]);
+
+  // Same transform as the main model (same coordinate system)
+  const scale = 0.008;
+
+  return (
+    <group scale={scale} position={[5.6 * scale, -1.6 * scale, -21.7 * scale]}>
+      {structures.map(({ mesh, name, system, description, clinicalSignificance, color }) => (
+        <GLTFMesh
+          key={name}
+          mesh={mesh}
+          structureName={name}
+          system={system}
+          description={description}
+          clinicalSignificance={clinicalSignificance}
+          originalColor={color}
+        />
+      ))}
+    </group>
+  );
+}
+
 useGLTF.preload("/models/pelvis-supply-organs-mri.glb");
+useGLTF.preload("/models/pelvic-organs-mri.glb");
