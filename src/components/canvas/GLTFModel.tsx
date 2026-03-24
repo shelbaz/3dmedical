@@ -119,12 +119,12 @@ const MESH_MAP: Record<number, StructureMapping> = {
   58: { name: "Lesser Sciatic Notch", system: "skeletal", description: "Smaller notch below the ischial spine, between ischial spine and ischial tuberosity. Bounded by sacrospinous and sacrotuberous ligaments." },
   59: { name: "Iliac Fossa (R)", system: "skeletal", description: "Right iliac fossa." },
 
-  // Muscles / pelvic floor (#eb6666 - pink)
-  60: { name: "Levator Ani", system: "muscular", description: "The primary muscle of the pelvic floor — a funnel-shaped diaphragm composed of pubococcygeus, puborectalis, and iliococcygeus. The urogenital hiatus transmits the urethra, vagina, and rectum.", clinicalSignificance: "The levator hiatus is the primary site of weakness in pelvic organ prolapse. Avulsion occurs in ~36% of vaginal deliveries." },
-  61: { name: "Coccygeus / Ischiococcygeus", system: "muscular", description: "Triangular muscle from ischial spine to lateral sacrum/coccyx. Often partially tendinous, blending with the sacrospinous ligament. Completes the pelvic diaphragm posteriorly." },
-  62: { name: "Obturator Internus", system: "muscular", description: "Pelvic wall muscle covering the obturator foramen. Its fascia gives rise to the ATFP (arcus tendineus fasciae pelvis) and forms Alcock's canal.", clinicalSignificance: "The ATFP ('white line') is the lateral attachment of pubocervical fascia — detachment causes paravaginal defect (lateral cystocele). Alcock's canal contains the pudendal neurovascular bundle." },
-  63: { name: "Piriformis", system: "muscular", description: "Origin: anterior sacrum (S2-S4). Exits through the greater sciatic foramen, dividing it into suprapiriform and infrapiriform compartments.", clinicalSignificance: "The sciatic nerve exits below piriformis (~88%). Superior gluteal nerve/vessels pass above it. Piriformis syndrome mimics sciatica." },
-  64: { name: "Pelvic Floor Fascia", system: "muscular", description: "The fascial layers overlying the pelvic floor musculature. Includes the superior and inferior fasciae of the pelvic diaphragm." },
+  // Soft tissue / pelvic floor (#eb6666 - pink) — MRI doesn't segment individual muscles
+  60: { name: "Pelvic Soft Tissue (Anterior)", system: "organs", description: "Anterior pelvic soft tissue mass from MRI segmentation. Includes portions of the pelvic floor and surrounding connective tissue." },
+  61: { name: "Pelvic Soft Tissue (Posterior)", system: "organs", description: "Posterior pelvic soft tissue from MRI." },
+  62: { name: "Pelvic Soft Tissue (Lateral L)", system: "organs", description: "Left lateral pelvic soft tissue from MRI." },
+  63: { name: "Pelvic Soft Tissue (Lateral R)", system: "organs", description: "Right lateral pelvic soft tissue from MRI." },
+  64: { name: "Pelvic Floor Tissue", system: "organs", description: "Pelvic floor tissue mass from MRI segmentation." },
 
   // Reproductive organs (#efa4a4 - light pink)
   65: { name: "Uterus", system: "organs", description: "Pear-shaped muscular organ. Parts: fundus, body, isthmus, cervix. Three-layered wall: endometrium, myometrium, perimetrium. Typically anteverted and anteflexed.", clinicalSignificance: "Primary support: cardinal ligaments (Level I), uterosacral ligaments. Uterine artery is primary blood supply; ovarian artery provides collateral at fundus." },
